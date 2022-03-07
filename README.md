@@ -1,6 +1,10 @@
 # SO2 Projekt
 ## Projekt wielowątkowy C++ na Linuxie
 
+### kompilowanie
++ g++ main.cpp -o program -lncurses
+
+
 ### tworzenie nowego projektu
 + mkdir nazwaFolderu
 + cd nazwaFolderu 
