@@ -18,25 +18,46 @@ void draw_info()
 
 
 void draw_speedway() 
-{
+{   
     for (size_t i = 20; i < 86; i++)
     {
-        mvprintw(8, i, "+");
-        mvprintw(26, i, "+");
+        mvprintw(8, i, "*");
+
+        if (i < 85)
+            mvprintw(26, i, "*");
+        
     }
     for (size_t j = 13; j < 21; j++)
     {
-        mvprintw(j, 10, "+");
-        mvprintw(j, 96, "+");
+        mvprintw(j, 10, "*");
+        mvprintw(j, 96, "*");
     }
     for (size_t k = 0; k < 5; k++)
     {
-        mvprintw(13 - k, 10 + k * 2, "+");
-        mvprintw(21 + k, 10 + k * 2, "+");
-        mvprintw(25 - k, 86 + k * 2, "+");
-        mvprintw(8 + k, 86 + k * 2, "+");
+        mvprintw(13 - k, 10 + k * 2, "*");
+        mvprintw(21 + k, 10 + k * 2, "*");
+        mvprintw(25 - k, 86 + k * 2, "*");
+        mvprintw(8 + k, 86 + k * 2, "*");
     }
+
+    for (size_t i = 30; i < 76; i++)
+    {
+        mvprintw(15, i, "*");
+        mvprintw(19, i, "*");
+    }
+    for (size_t j = 16; j < 19; j++)
+    {
+        mvprintw(j, 28, "*");
+        mvprintw(j, 77, "*");
+    }
+
     refresh();
+}
+
+
+void move_bolid()
+{
+    
 }
 
 
