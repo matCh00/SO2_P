@@ -4,5 +4,6 @@
 #include <ncurses.h>
 #include <unistd.h>
 #include <time.h>
+#include <cstring>
 
 using namespace std;
