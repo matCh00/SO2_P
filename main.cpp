@@ -1,11 +1,4 @@
-#include <iostream>
-#include <stdlib.h>
-#include <pthread.h>
-#include <ncurses.h>
-#include <unistd.h>
-#include <time.h>
-
-using namespace std;
+#include "libs.hpp"
 
 
 void draw_info()
@@ -75,16 +68,11 @@ void draw_speedway()
 }
 
 
-void move_bolid()
-{
-    
-}
-
-
 int main() 
 {
     initscr();
     noecho();
+    cbreak();
     curs_set(0);
 
     pthread_t thread_one;
@@ -102,7 +90,7 @@ int main()
         if (is_exit == 'x') 
         {
             endwin();
-            exit(0);
+            return 0;
         }
     }
 }
