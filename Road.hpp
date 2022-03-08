@@ -6,11 +6,12 @@
 
 class Road
 {
-private:
-    /* data */
 public:
     Road();
     ~Road();
+
+    void draw_speedway();
+    void draw_info(); 
 };
 
 

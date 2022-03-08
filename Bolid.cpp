@@ -1,5 +1,6 @@
 #include "Bolid.hpp"
 
+
 Bolid::Bolid(int y, int x, char c)
 {
     xLoc = x;
