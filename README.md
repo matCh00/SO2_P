@@ -1,9 +1,9 @@
 # SO2 Projekt
 ## Projekt wielowątkowy C++ na Linuxie
 
-### kompilowanie
-+ g++ main.cpp -o program -lncurses
-
+### kompilowanie i uruchamianie
++ make
++ ./program
 
 ### tworzenie nowego projektu
 + mkdir nazwaFolderu
@@ -11,11 +11,6 @@
 + mkdir nazwaProjektu
 + cd nazwaProjektu
 + code .
-+ _tworzymy plik .cpp_
-+ _Terminal -> Configure Default Build Task -> C/C++: g++ build active file_
-+ _Terminal -> Run Build Task_
-+ ./nazwaPliku
-
 
 ### komendy Linuxowe i opis
 + `cat [filename]` _Display file’s contents to the standard output device_ 
