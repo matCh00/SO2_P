@@ -7,10 +7,11 @@
 class Bolid
 {
 private:
-    int xLoc, yLoc, xMax, yMax;
+    int xLoc, yLoc, xMax, yMax, id;
+    char lastChar;
 
 public:
-    Bolid(int y, int x);
+    Bolid(int y, int x, int id);
     ~Bolid();
 
     void mvup();

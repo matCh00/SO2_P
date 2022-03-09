@@ -2,18 +2,68 @@
 #include "Road.hpp"
 #include "Bolid.hpp"
 
+bool stop = false;
+const int NUM_THREADS = 10;
+pthread_mutex_t mutex;
+
 
 void* movement_func(void* arg)
 {
-    Bolid *bolid = new Bolid(3, 3);
+    int count = 0;
 
-    for (size_t i = 0; i < 30; i++)
+    Bolid *bolid = new Bolid(11, 15, 1);
+
+    usleep(300*1000);
+
+    for (size_t i = 0; i < 5; i++)
     {
+        pthread_mutex_lock(&mutex);
         bolid->mvright();
         bolid->display();
         refresh();
-        usleep(500*1000);
+        pthread_mutex_unlock(&mutex);
+        usleep(50*1000);
     }
+    while (count++ < 2)
+    {
+        for (size_t i = 0; i < 64; i++)
+        {
+            pthread_mutex_lock(&mutex);
+            bolid->mvright();
+            bolid->display();
+            refresh();
+            pthread_mutex_unlock(&mutex);
+            usleep(50*1000);
+        }
+        for (size_t i = 0; i < 11; i++)
+        {
+            pthread_mutex_lock(&mutex);
+            bolid->mvdown();
+            bolid->display();
+            refresh();
+            pthread_mutex_unlock(&mutex);
+            usleep(150*1000);
+        }
+        for (size_t i = 0; i < 64; i++)
+        {
+            pthread_mutex_lock(&mutex);
+            bolid->mvleft();
+            bolid->display();
+            refresh();
+            pthread_mutex_unlock(&mutex);
+            usleep(50*1000);
+        }
+        for (size_t i = 0; i < 11; i++)
+        {
+            pthread_mutex_lock(&mutex);
+            bolid->mvup();
+            bolid->display();
+            refresh();
+            pthread_mutex_unlock(&mutex);
+            usleep(150*1000);
+        }
+    }
+    
     pthread_exit(0);
 
     return NULL;
@@ -23,34 +73,46 @@ int main()
 {
     initscr();
     noecho();
-    cbreak();
     curs_set(0);
+    cbreak();
+
 
     Road *road = new Road();
     road->draw_info();
     road->draw_speedway();
 
-    pthread_t threads[5] = {'1', '2', '3', '4', '5'};
 
-    for (size_t i = 0; i < 5; i++)
+    pthread_mutex_init(&mutex, NULL);
+
+    //pthread_t tid0, tid1, tid2;
+    //pthread_t * threads[] = {&tid0, &tid1, &tid2};
+    pthread_t threads[NUM_THREADS];
+    int thread_args[NUM_THREADS];
+
+    for (size_t i = 0; i < NUM_THREADS; i++)
     {
+        thread_args[i] = i;
+        //pthread_create(threads[i], NULL, &movement_func, (void *)&threads[i]);  
         pthread_create(&threads[i], NULL, movement_func, NULL); 
-    //}
-
-    //for (size_t i = 0; i < 2; i++)
-    //{
-        pthread_join(threads[i], NULL); 
-        usleep(500*1000);
+        usleep(1500*1000); 
     }
-    
-    //while(1)
-    //{
-        int is_exit = getch();
 
-        if (is_exit == 'x') 
-        {
-            endwin();
-            return 0;
-        }
-    //}
+    for (size_t i = 0; i < NUM_THREADS; i++)
+    {
+        thread_args[i] = i;
+        //pthread_join(*threads[i], NULL); 
+        pthread_join(threads[i], NULL); 
+    }
+
+
+    if (getchar()) 
+    {
+        pthread_mutex_destroy(&mutex);
+        //pthread_exit(NULL);
+
+        curs_set(0);
+        system("clear");
+        system("reset");
+        return 0;
+    }
 }
