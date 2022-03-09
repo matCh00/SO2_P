@@ -1,6 +1,6 @@
 #include "libs.hpp"
 #include "Road.hpp"
-#include "Bolid.hpp"
+#include "Bolide.hpp"
 
 bool stop = false;
 const int NUM_THREADS = 10;
@@ -11,7 +11,7 @@ void* movement_func(void* arg)
 {
     int count = 0;
 
-    Bolid *bolid = new Bolid(11, 15, 1);
+    Bolide *bolid = new Bolide(11, 15, 1);
 
     usleep(300*1000);
 
@@ -108,9 +108,8 @@ int main()
     if (getchar()) 
     {
         pthread_mutex_destroy(&mutex);
-        //pthread_exit(NULL);
+        endwin();
 
-        curs_set(0);
         system("clear");
         system("reset");
         return 0;
