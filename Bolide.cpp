@@ -40,10 +40,17 @@ void Bolide::mvright()
     xLoc++;
 }
 
-void Bolide::display()
+void Bolide::display(int type)
 {
     // TODO: zrobić coś aby zachowywać usunięte znaki
-    mvprintw(yLoc, xLoc, "X");
+    if (type == 0)
+    {
+        mvprintw(yLoc, xLoc, "X");
+    }
+    else
+    {
+        mvprintw(yLoc, xLoc, "O");
+    }
 }
 
 void Bolide::clear()

@@ -18,7 +18,7 @@ public:
     void mvdown();
     void mvleft();
     void mvright();
-    void display();
+    void display(int type);
     void clear();
 };
 

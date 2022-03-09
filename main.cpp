@@ -18,7 +18,7 @@ void movement_long(int y, int x, int id)
     {
         mtx.lock();
         bolid->mvright();
-        bolid->display();
+        bolid->display(0);
         refresh();
         mtx.unlock();
         this_thread::sleep_for(50ms);
@@ -29,7 +29,7 @@ void movement_long(int y, int x, int id)
         {
             mtx.lock();
             bolid->mvright();
-            bolid->display();
+            bolid->display(0);
             refresh();
             mtx.unlock();
             this_thread::sleep_for(50ms);
@@ -38,7 +38,7 @@ void movement_long(int y, int x, int id)
         {
             mtx.lock();
             bolid->mvdown();
-            bolid->display();
+            bolid->display(0);
             refresh();
             mtx.unlock();
             this_thread::sleep_for(150ms);
@@ -47,7 +47,7 @@ void movement_long(int y, int x, int id)
         {
             mtx.lock();
             bolid->mvleft();
-            bolid->display();
+            bolid->display(0);
             refresh();
             mtx.unlock();
             this_thread::sleep_for(50ms);
@@ -56,7 +56,7 @@ void movement_long(int y, int x, int id)
         {
             mtx.lock();
             bolid->mvup();
-            bolid->display();
+            bolid->display(0);
             refresh();
             mtx.unlock();
             this_thread::sleep_for(150ms);
@@ -75,16 +75,16 @@ void movement_short(int y, int x, int id)
 
     Bolide *bolid = new Bolide(y, x, id);
 
-    this_thread::sleep_for(200ms);
+    this_thread::sleep_for(350ms);
 
     for (size_t i = 0; i < 23; i++)
     {
         mtx.lock();
         bolid->mvdown();
-        bolid->display();
+        bolid->display(1);
         refresh();
         mtx.unlock();
-        this_thread::sleep_for(90ms);
+        this_thread::sleep_for(300ms);
     }
     
     mtx.lock();
