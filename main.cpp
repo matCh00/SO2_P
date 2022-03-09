@@ -2,17 +2,17 @@
 #include "Road.hpp"
 #include "Bolide.hpp"
 
-bool stop = false;
 const int NUM_THREADS = 10;
 mutex mtx;
+bool stop = false;
 
-void movement_func()
+void movement_long(int y, int x, int id)
 {
     int count = 0;
 
-    Bolide *bolid = new Bolide(11, 15, 1);
+    Bolide *bolid = new Bolide(y, x, id);
 
-    usleep(300*1000);
+    this_thread::sleep_for(300ms);
 
     for (size_t i = 0; i < 5; i++)
     {
@@ -21,7 +21,7 @@ void movement_func()
         bolid->display();
         refresh();
         mtx.unlock();
-        usleep(50*1000);
+        this_thread::sleep_for(50ms);
     }
     while (count++ < 2)
     {
@@ -32,7 +32,7 @@ void movement_func()
             bolid->display();
             refresh();
             mtx.unlock();
-            usleep(50*1000);
+            this_thread::sleep_for(50ms);
         }
         for (size_t i = 0; i < 11; i++)
         {
@@ -41,7 +41,7 @@ void movement_func()
             bolid->display();
             refresh();
             mtx.unlock();
-            usleep(150*1000);
+            this_thread::sleep_for(150ms);
         }
         for (size_t i = 0; i < 64; i++)
         {
@@ -50,7 +50,7 @@ void movement_func()
             bolid->display();
             refresh();
             mtx.unlock();
-            usleep(50*1000);
+            this_thread::sleep_for(50ms);
         }
         for (size_t i = 0; i < 11; i++)
         {
@@ -59,9 +59,38 @@ void movement_func()
             bolid->display();
             refresh();
             mtx.unlock();
-            usleep(150*1000);
+            this_thread::sleep_for(150ms);
         }
     }
+
+    mtx.lock();
+    bolid->clear();
+    refresh();
+    mtx.unlock();
+}
+
+void movement_short(int y, int x, int id)
+{
+    int count = 0;
+
+    Bolide *bolid = new Bolide(y, x, id);
+
+    this_thread::sleep_for(200ms);
+
+    for (size_t i = 0; i < 23; i++)
+    {
+        mtx.lock();
+        bolid->mvdown();
+        bolid->display();
+        refresh();
+        mtx.unlock();
+        this_thread::sleep_for(90ms);
+    }
+    
+    mtx.lock();
+    bolid->clear();
+    refresh();
+    mtx.unlock();
 }
 
 int main() 
@@ -76,12 +105,20 @@ int main()
     road->draw_info();
     road->draw_speedway();
 
-    vector<thread> threads;
+
+    vector<thread> threads_1;
+    vector<thread> threads_2;
 
     for (size_t i = 0; i < NUM_THREADS; i++)
     {
-        threads.emplace_back([&](){movement_func();});
+        threads_1.emplace_back([&](){movement_long(11, 15, i);});
+        threads_2.emplace_back([&](){movement_short(5, 62, i);});
         usleep(1500*1000); 
+    }
+    for (size_t i = 0; i < NUM_THREADS; i++)
+    {
+        threads_1[i].join();
+        threads_2[i].join();
     }
 
     

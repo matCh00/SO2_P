@@ -19,6 +19,7 @@ public:
     void mvleft();
     void mvright();
     void display();
+    void clear();
 };
 
 

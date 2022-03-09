@@ -46,3 +46,8 @@ void Bolide::display()
     mvprintw(yLoc, xLoc, "X");
 }
 
+void Bolide::clear()
+{
+    mvprintw(yLoc, xLoc, " ");
+}
+
