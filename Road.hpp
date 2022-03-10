@@ -3,7 +3,6 @@
 
 #include "libs.hpp"
 
-
 class Road
 {
 public:

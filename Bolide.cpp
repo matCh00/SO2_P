@@ -2,13 +2,16 @@
 
 #define FIRST_PAIR 1
 #define SECOND_PAIR 2
+mutex mut;
 
-Bolide::Bolide(int y, int x, int id, int speed)
+Bolide::Bolide(int y, int x, int id, int speed, char type, int color)
 {
-    xLoc = x;
-    yLoc = y;
-    id = id;
-    speed = speed;
+    this->xLoc = x;
+    this->yLoc = y;
+    this->id = id;
+    this->speed = speed;
+    this->type = type;
+    this->color = color;
     init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
     init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
 }
@@ -29,56 +32,72 @@ void Bolide::dont_override()
 
 void Bolide::mvup()
 {
+    this_thread::sleep_for(chrono::milliseconds(speed));
+    mut.lock();
     dont_override();
     yLoc--;
+    display();
 }
 
 void Bolide::mvdown()
 {
+    this_thread::sleep_for(chrono::milliseconds(speed*2));
+    mut.lock();
     dont_override();
     yLoc++;
+    display();
 }
 
 void Bolide::mvleft()
 {
+    mut.lock();
     dont_override();
     xLoc--;
+    display();
 }
 
 void Bolide::mvright()
 {
+    mut.lock();
     dont_override();
     xLoc++; 
+    display();
 }
 
-void Bolide::display(int type)
+void Bolide::display()
 {
     // pobranie znaku z bieżącej pozycji
     char lastChar = (char)mvinch(yLoc, xLoc);
 
-    if (type == 0)
+    if (type == 'X')
     {
-        attron(COLOR_PAIR(FIRST_PAIR));
+        attron(COLOR_PAIR(color));
         // nie nadpisujemy konturów trasy
         if (lastChar != (char)124 && lastChar != (char)39)
         {
-            mvprintw(yLoc, xLoc, "X");
+            mvprintw(yLoc, xLoc, "%c", type);
         }
-        attroff(COLOR_PAIR(FIRST_PAIR));
+        attroff(COLOR_PAIR(color));
     }
     else
     {
-        attron(COLOR_PAIR(SECOND_PAIR));
+        attron(COLOR_PAIR(color));
         // nie nadpisujemy konturów trasy
         if (lastChar != (char)124 && lastChar != (char)39)
         {
-            mvprintw(yLoc, xLoc, "O");
+            mvprintw(yLoc, xLoc, "%c", type);
         }
-        attroff(COLOR_PAIR(SECOND_PAIR));
+        attroff(COLOR_PAIR(color));
     }
+    refresh();
+    mut.unlock();
+    this_thread::sleep_for(chrono::milliseconds(speed));
 }
 
 void Bolide::clear()
 {
+    mut.lock();
     mvprintw(yLoc, xLoc, " ");
+    refresh();
+    mut.unlock();
 }

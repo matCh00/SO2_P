@@ -1,6 +1,5 @@
 #include "Road.hpp"
 
-
 Road::Road()
 {
 }

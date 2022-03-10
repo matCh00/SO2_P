@@ -3,93 +3,57 @@
 #include "Bolide.hpp"
 
 const int NUM_THREADS = 4;
-mutex mtx;
+//mutex mtx;
 bool run = true;
 
 
-void movement_long(int y, int x, int id, int speed)
+void movement_long(int y, int x, int id, int speed, char type, int color)
 {
-    int laps = 1;
+    Bolide *bolid = new Bolide(y, x, id, speed, type, color);
 
-    Bolide *bolid = new Bolide(y, x, id, speed);
+    int laps = 1;
 
     // trasa
     for (size_t i = 0; i < 5; i++)
     {
-        mtx.lock();
         bolid->mvright();
-        bolid->display(0);
-        refresh();
-        mtx.unlock();
-        this_thread::sleep_for(50ms);
     }
     while (laps-- > 0)
     {
         for (size_t i = 0; i < 64; i++)
         {
-            mtx.lock();
             bolid->mvright();
-            bolid->display(0);
-            refresh();
-            mtx.unlock();
-            this_thread::sleep_for(50ms);
         }
         for (size_t i = 0; i < 11; i++)
         {
-            mtx.lock();
             bolid->mvdown();
-            bolid->display(0);
-            refresh();
-            mtx.unlock();
-            this_thread::sleep_for(150ms);
         }
         for (size_t i = 0; i < 64; i++)
         {
-            mtx.lock();
             bolid->mvleft();
-            bolid->display(0);
-            refresh();
-            mtx.unlock();
-            this_thread::sleep_for(50ms);
         }
         for (size_t i = 0; i < 11; i++)
         {
-            mtx.lock();
             bolid->mvup();
-            bolid->display(0);
-            refresh();
-            mtx.unlock();
-            this_thread::sleep_for(150ms);
         }
     }
 
     // usunięcie znaku
-    mtx.lock();
     bolid->clear();
-    refresh();
-    mtx.unlock();
 }
 
-void movement_short(int y, int x, int id, int speed)
+void movement_short(int y, int x, int id, int speed, char type, int color)
 {
-    Bolide *bolid = new Bolide(y, x, id, speed);
+    Bolide *bolid = new Bolide(y, x, id, speed, type, color);
 
     // trasa
     for (size_t i = 0; i < 25; i++)
     {        
-        mtx.lock();
         bolid->mvdown();
-        bolid->display(1);
-        refresh();
-        mtx.unlock();
-        this_thread::sleep_for(chrono::milliseconds(speed));
     }
     
     // usunięcie znaku
-    mtx.lock();
     bolid->clear();
-    refresh();
-    mtx.unlock();
 }
 
 void exit_loop()
@@ -127,14 +91,14 @@ int main()
     // ciągłe tworzenie wątków
     while (run)
     {
-        threads_1.emplace_back([&](){movement_long(11, 15, i, 150);});
-        threads_2.emplace_back([&](){movement_short(4, 62, i, 250);});
+        threads_1.emplace_back([&](){movement_long(11, 15, i, 40, 'X', 1);});
+        threads_2.emplace_back([&](){movement_short(4, 62, i, 70, 'O', 2);});
 
         // konieczne aby potem wywołać destruktor ~thread()
         threads_1[i].detach();
         threads_2[i++].detach();
 
-        usleep(1100*1000); 
+        usleep(1000*1000); 
     }
 
     // natychmiastowe zakończenie każdego wątku
