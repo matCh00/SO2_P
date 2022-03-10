@@ -8,7 +8,7 @@ class Bolide
 {
 private:
     int xLoc, yLoc, xMax, yMax, id;
-    char lastChar;
+    void dont_override();
 
 public:
     Bolide(int y, int x, int id);
@@ -19,7 +19,7 @@ public:
     void mvleft();
     void mvright();
     void display(int type);
-    void clear();
+    void clear(); 
 };
 
 

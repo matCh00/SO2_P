@@ -12,44 +12,59 @@ Bolide::~Bolide()
 {
 }
 
+void Bolide::dont_override()
+{
+    // nie usuwamy konturów po przejechaniu bolidu
+    if ((char)mvinch(yLoc, xLoc) != (char)124 && (char)mvinch(yLoc, xLoc) != (char)39)
+    {
+        mvprintw(yLoc, xLoc, " ");
+    }
+}
+
 void Bolide::mvup()
 {
-    lastChar = mvinch(yLoc, xLoc);
-    mvprintw(yLoc, xLoc, " ");
+    dont_override();
     yLoc--;
 }
 
 void Bolide::mvdown()
 {
-    lastChar = mvinch(yLoc, xLoc);
-    mvprintw(yLoc, xLoc, " ");
+    dont_override();
     yLoc++;
 }
 
 void Bolide::mvleft()
 {
-    lastChar = mvinch(yLoc, xLoc);
-    mvprintw(yLoc, xLoc, " ");
+    dont_override();
     xLoc--;
 }
 
 void Bolide::mvright()
 {
-    lastChar = mvinch(yLoc, xLoc);
-    mvprintw(yLoc, xLoc, " ");
-    xLoc++;
+    dont_override();
+    xLoc++; 
 }
 
 void Bolide::display(int type)
 {
-    // TODO: zrobić coś aby zachowywać usunięte znaki
+    // pobranie znaku z bieżącej pozycji
+    char lastChar = (char)mvinch(yLoc, xLoc);
+
     if (type == 0)
     {
-        mvprintw(yLoc, xLoc, "X");
+        // nie nadpisujemy konturów trasy
+        if (lastChar != (char)124 && lastChar != (char)39)
+        {
+            mvprintw(yLoc, xLoc, "X");
+        }
     }
     else
     {
-        mvprintw(yLoc, xLoc, "O");
+        // nie nadpisujemy konturów trasy
+        if (lastChar != (char)124 && lastChar != (char)39)
+        {
+            mvprintw(yLoc, xLoc, "O");
+        }
     }
 }
 
@@ -57,4 +72,3 @@ void Bolide::clear()
 {
     mvprintw(yLoc, xLoc, " ");
 }
-

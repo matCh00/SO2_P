@@ -2,18 +2,17 @@
 #include "Road.hpp"
 #include "Bolide.hpp"
 
-const int NUM_THREADS = 10;
+const int NUM_THREADS = 4;
 mutex mtx;
-bool stop = false;
+bool run = true;
 
 void movement_long(int y, int x, int id)
 {
-    int count = 0;
+    int laps = 1;
 
     Bolide *bolid = new Bolide(y, x, id);
 
-    this_thread::sleep_for(300ms);
-
+    // trasa
     for (size_t i = 0; i < 5; i++)
     {
         mtx.lock();
@@ -23,7 +22,7 @@ void movement_long(int y, int x, int id)
         mtx.unlock();
         this_thread::sleep_for(50ms);
     }
-    while (count++ < 2)
+    while (laps-- > 0)
     {
         for (size_t i = 0; i < 64; i++)
         {
@@ -63,6 +62,7 @@ void movement_long(int y, int x, int id)
         }
     }
 
+    // usunięcie znaku
     mtx.lock();
     bolid->clear();
     refresh();
@@ -71,12 +71,9 @@ void movement_long(int y, int x, int id)
 
 void movement_short(int y, int x, int id)
 {
-    int count = 0;
-
     Bolide *bolid = new Bolide(y, x, id);
 
-    this_thread::sleep_for(350ms);
-
+    // trasa
     for (size_t i = 0; i < 23; i++)
     {
         mtx.lock();
@@ -84,13 +81,26 @@ void movement_short(int y, int x, int id)
         bolid->display(1);
         refresh();
         mtx.unlock();
-        this_thread::sleep_for(300ms);
+        this_thread::sleep_for(250ms);
     }
     
+    // usunięcie znaku
     mtx.lock();
     bolid->clear();
     refresh();
     mtx.unlock();
+}
+
+void exit_loop()
+{
+    while (true)
+    {
+        if (getchar()) 
+        {
+            run = false;
+            return;
+        }
+    }
 }
 
 int main() 
@@ -109,25 +119,31 @@ int main()
     vector<thread> threads_1;
     vector<thread> threads_2;
 
-    for (size_t i = 0; i < NUM_THREADS; i++)
+    //thread thread_3(exit_loop);
+
+    int i = 0;
+
+    // tworzenie wątków
+    //while (run)
+    while (i < NUM_THREADS)
     {
         threads_1.emplace_back([&](){movement_long(11, 15, i);});
-        threads_2.emplace_back([&](){movement_short(5, 62, i);});
+        threads_2.emplace_back([&](){movement_short(5, 62, i++);});
+        //threads_1[i].detach();
+        //threads_2[i++].detach();
         usleep(1500*1000); 
     }
-    for (size_t i = 0; i < NUM_THREADS; i++)
+    for (size_t j = 0; j < i; j++)
     {
-        threads_1[i].join();
-        threads_2[i].join();
-    }
+        threads_1[j].join();
+        threads_2[j].join();
 
+        //threads_1[i].thread::~thread();
+        //threads_2[i].thread::~thread();
+    }
     
-    if (getchar()) 
-    {
-        endwin();
-
-        system("clear");
-        system("reset");
-        return 0;
-    }
+    endwin();
+    system("clear");
+    system("reset");
+    return 0;
 }
