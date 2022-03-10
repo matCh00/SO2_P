@@ -32,7 +32,7 @@ void Bolide::dont_override()
 
 void Bolide::mvup()
 {
-    this_thread::sleep_for(chrono::milliseconds(speed));
+    this_thread::sleep_for(chrono::milliseconds(speed*2));
     mut.lock();
     dont_override();
     yLoc--;
@@ -62,6 +62,14 @@ void Bolide::mvright()
     dont_override();
     xLoc++; 
     display();
+}
+
+void Bolide::clear()
+{
+    mut.lock();
+    mvprintw(yLoc, xLoc, " ");
+    refresh();
+    mut.unlock();
 }
 
 void Bolide::display()
@@ -94,10 +102,47 @@ void Bolide::display()
     this_thread::sleep_for(chrono::milliseconds(speed));
 }
 
-void Bolide::clear()
+void Bolide::movement_long()
 {
-    mut.lock();
-    mvprintw(yLoc, xLoc, " ");
-    refresh();
-    mut.unlock();
+    int laps = 1;
+
+    // trasa
+    for (size_t i = 0; i < 5; i++)
+    {
+        mvright();
+    }
+    while (laps-- > 0)
+    {
+        for (size_t i = 0; i < 64; i++)
+        {
+            mvright();
+        }
+        for (size_t i = 0; i < 11; i++)
+        {
+            mvdown();
+        }
+        for (size_t i = 0; i < 64; i++)
+        {
+            mvleft();
+        }
+        for (size_t i = 0; i < 11; i++)
+        {
+            mvup();
+        }
+    }
+
+    // usunięcie znaku
+    clear();
+}
+
+void Bolide::movement_short()
+{
+    // trasa
+    for (size_t i = 0; i < 25; i++)
+    {        
+        mvdown();
+    }
+    
+    // usunięcie znaku
+    clear();
 }

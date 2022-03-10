@@ -2,59 +2,7 @@
 #include "Road.hpp"
 #include "Bolide.hpp"
 
-const int NUM_THREADS = 4;
-//mutex mtx;
 bool run = true;
-
-
-void movement_long(int y, int x, int id, int speed, char type, int color)
-{
-    Bolide *bolid = new Bolide(y, x, id, speed, type, color);
-
-    int laps = 1;
-
-    // trasa
-    for (size_t i = 0; i < 5; i++)
-    {
-        bolid->mvright();
-    }
-    while (laps-- > 0)
-    {
-        for (size_t i = 0; i < 64; i++)
-        {
-            bolid->mvright();
-        }
-        for (size_t i = 0; i < 11; i++)
-        {
-            bolid->mvdown();
-        }
-        for (size_t i = 0; i < 64; i++)
-        {
-            bolid->mvleft();
-        }
-        for (size_t i = 0; i < 11; i++)
-        {
-            bolid->mvup();
-        }
-    }
-
-    // usunięcie znaku
-    bolid->clear();
-}
-
-void movement_short(int y, int x, int id, int speed, char type, int color)
-{
-    Bolide *bolid = new Bolide(y, x, id, speed, type, color);
-
-    // trasa
-    for (size_t i = 0; i < 25; i++)
-    {        
-        bolid->mvdown();
-    }
-    
-    // usunięcie znaku
-    bolid->clear();
-}
 
 void exit_loop()
 {
@@ -75,6 +23,8 @@ int main()
     cbreak();
     start_color();
     
+    srand (time(NULL));
+
     Road *road = new Road();
     road->draw_info();
     road->draw_speedway();
@@ -91,8 +41,13 @@ int main()
     // ciągłe tworzenie wątków
     while (run)
     {
-        threads_1.emplace_back([&](){movement_long(11, 15, i, 40, 'X', 1);});
-        threads_2.emplace_back([&](){movement_short(4, 62, i, 70, 'O', 2);});
+        int speed_1 = rand() % 41 - 20;
+        Bolide *bolid_1 = new Bolide(11, 15, i, 40 + speed_1, 'X', 1);
+        threads_1.emplace_back([&](){bolid_1->movement_long();});
+
+        int speed_2 = rand() % 21 - 10;
+        Bolide *bolid_2 = new Bolide(4, 62, i, 50 + speed_2, 'O', 2);
+        threads_2.emplace_back([&](){bolid_2->movement_short();});
 
         // konieczne aby potem wywołać destruktor ~thread()
         threads_1[i].detach();
@@ -114,8 +69,7 @@ int main()
     }
     thread_3.~thread();
 
-
-    system("reset");
-    system("clear");
+    system("stty sane");  // naprawia bug: po zakończeniu programu znaki w terminalu były niewidzialne
+    system("clear");      // wyczyszczenie terminala
     return 0;
 }
