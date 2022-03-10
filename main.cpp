@@ -7,11 +7,11 @@ mutex mtx;
 bool run = true;
 
 
-void movement_long(int y, int x, int id)
+void movement_long(int y, int x, int id, int speed)
 {
     int laps = 1;
 
-    Bolide *bolid = new Bolide(y, x, id);
+    Bolide *bolid = new Bolide(y, x, id, speed);
 
     // trasa
     for (size_t i = 0; i < 5; i++)
@@ -70,9 +70,9 @@ void movement_long(int y, int x, int id)
     mtx.unlock();
 }
 
-void movement_short(int y, int x, int id)
+void movement_short(int y, int x, int id, int speed)
 {
-    Bolide *bolid = new Bolide(y, x, id);
+    Bolide *bolid = new Bolide(y, x, id, speed);
 
     // trasa
     for (size_t i = 0; i < 25; i++)
@@ -82,7 +82,7 @@ void movement_short(int y, int x, int id)
         bolid->display(1);
         refresh();
         mtx.unlock();
-        this_thread::sleep_for(250ms);
+        this_thread::sleep_for(chrono::milliseconds(speed));
     }
     
     // usunięcie znaku
@@ -99,7 +99,6 @@ void exit_loop()
         if (getchar()) 
         {
             run = false;
-            return;
         }
     }
 }
@@ -128,8 +127,8 @@ int main()
     // ciągłe tworzenie wątków
     while (run)
     {
-        threads_1.emplace_back([&](){movement_long(11, 15, i);});
-        threads_2.emplace_back([&](){movement_short(4, 62, i);});
+        threads_1.emplace_back([&](){movement_long(11, 15, i, 150);});
+        threads_2.emplace_back([&](){movement_short(4, 62, i, 250);});
 
         // konieczne aby potem wywołać destruktor ~thread()
         threads_1[i].detach();

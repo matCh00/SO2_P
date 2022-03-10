@@ -64,8 +64,8 @@ void Road::draw_speedway()
     for (size_t k = 58; k < 67; k += 2)
     {
         mvprintw(8, k, "'");
-        mvprintw(15, k, "'");
-        mvprintw(19, k, "'");
+        mvprintw(15, k, " ");
+        mvprintw(19, k, " ");
         mvprintw(26, k, "'");
     }
 }

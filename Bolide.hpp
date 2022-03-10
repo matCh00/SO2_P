@@ -7,11 +7,11 @@
 class Bolide
 {
 private:
-    int xLoc, yLoc, xMax, yMax, id;
+    int xLoc, yLoc, xMax, yMax, id, speed;
     void dont_override();
 
 public:
-    Bolide(int y, int x, int id);
+    Bolide(int y, int x, int id, int speed);
     ~Bolide();
 
     void mvup();

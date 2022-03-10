@@ -3,11 +3,12 @@
 #define FIRST_PAIR 1
 #define SECOND_PAIR 2
 
-Bolide::Bolide(int y, int x, int id)
+Bolide::Bolide(int y, int x, int id, int speed)
 {
     xLoc = x;
     yLoc = y;
     id = id;
+    speed = speed;
     init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
     init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
 }
