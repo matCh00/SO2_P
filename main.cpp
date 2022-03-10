@@ -75,8 +75,8 @@ void movement_short(int y, int x, int id)
     Bolide *bolid = new Bolide(y, x, id);
 
     // trasa
-    for (size_t i = 0; i < 23; i++)
-    {
+    for (size_t i = 0; i < 25; i++)
+    {        
         mtx.lock();
         bolid->mvdown();
         bolid->display(1);
@@ -119,32 +119,40 @@ int main()
     vector<thread> threads_1;
     vector<thread> threads_2;
 
-    //thread thread_3(exit_loop);
+    // wątek wyłączający symulację
+    thread thread_3(exit_loop);
+    thread_3.detach();
 
     int i = 0;
 
-    // tworzenie wątków
-    //while (run)
-    while (i < NUM_THREADS)
+    // ciągłe tworzenie wątków
+    while (run)
     {
         threads_1.emplace_back([&](){movement_long(11, 15, i);});
-        threads_2.emplace_back([&](){movement_short(5, 62, i++);});
+        threads_2.emplace_back([&](){movement_short(4, 62, i);});
 
-        //threads_1[i].detach();
-        //threads_2[i++].detach();
-        usleep(1500*1000); 
+        // konieczne aby potem wywołać destruktor ~thread()
+        threads_1[i].detach();
+        threads_2[i++].detach();
+
+        usleep(1100*1000); 
     }
-    for (size_t j = 0; j < i; j++)
+
+    // natychmiastowe zakończenie każdego wątku
+    for (size_t j = 0; j < threads_1.size(); j++)
     {
-        threads_1[j].join();
-        threads_2[j].join();
-
-        //threads_1[i].thread::~thread();
-        //threads_2[i].thread::~thread();
+        //threads_1[j].join();
+        threads_1[j].~thread();
     }
-    
-    endwin();
-    system("clear");
+    for (size_t j = 0; j < threads_2.size(); j++)
+    {
+        //threads_2[j].join();
+        threads_2[j].~thread();
+    }
+    thread_3.~thread();
+
+
     system("reset");
+    system("clear");
     return 0;
 }

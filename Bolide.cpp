@@ -14,6 +14,7 @@ Bolide::Bolide(int y, int x, int id)
 
 Bolide::~Bolide()
 {
+    terminate();
 }
 
 void Bolide::dont_override()
