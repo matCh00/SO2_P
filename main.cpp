@@ -6,6 +6,7 @@ const int NUM_THREADS = 4;
 mutex mtx;
 bool run = true;
 
+
 void movement_long(int y, int x, int id)
 {
     int laps = 1;
@@ -109,12 +110,11 @@ int main()
     noecho();
     curs_set(0);
     cbreak();
-
-
+    start_color();
+    
     Road *road = new Road();
     road->draw_info();
     road->draw_speedway();
-
 
     vector<thread> threads_1;
     vector<thread> threads_2;
@@ -129,6 +129,7 @@ int main()
     {
         threads_1.emplace_back([&](){movement_long(11, 15, i);});
         threads_2.emplace_back([&](){movement_short(5, 62, i++);});
+
         //threads_1[i].detach();
         //threads_2[i++].detach();
         usleep(1500*1000); 

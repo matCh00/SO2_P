@@ -1,11 +1,15 @@
 #include "Bolide.hpp"
 
+#define FIRST_PAIR 1
+#define SECOND_PAIR 2
 
 Bolide::Bolide(int y, int x, int id)
 {
     xLoc = x;
     yLoc = y;
     id = id;
+    init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
 }
 
 Bolide::~Bolide()
@@ -52,19 +56,23 @@ void Bolide::display(int type)
 
     if (type == 0)
     {
+        attron(COLOR_PAIR(FIRST_PAIR));
         // nie nadpisujemy konturów trasy
         if (lastChar != (char)124 && lastChar != (char)39)
         {
             mvprintw(yLoc, xLoc, "X");
         }
+        attroff(COLOR_PAIR(FIRST_PAIR));
     }
     else
     {
+        attron(COLOR_PAIR(SECOND_PAIR));
         // nie nadpisujemy konturów trasy
         if (lastChar != (char)124 && lastChar != (char)39)
         {
             mvprintw(yLoc, xLoc, "O");
         }
+        attroff(COLOR_PAIR(SECOND_PAIR));
     }
 }
 
