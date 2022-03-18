@@ -11,7 +11,7 @@ Road::~Road()
 void Road::draw_info()
 {
     mvprintw(0, 1, "SO2 Projekt - Mateusz Chalik");
-    mvprintw(1, 1, "Symulacja wielowatkowa F1,  getchar() - wyjscie");
+    mvprintw(1, 1, "Symulacja wielowatkowa F1,  keyboard input - wyjscie");
 }
 
 void Road::draw_speedway()

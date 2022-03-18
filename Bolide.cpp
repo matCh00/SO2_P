@@ -104,14 +104,13 @@ void Bolide::display()
 
 void Bolide::movement_long()
 {
-    int laps = 1;
-
     // trasa
     for (size_t i = 0; i < 5; i++)
     {
         mvright();
     }
-    while (laps-- > 0)
+
+    while (true)  // nieskończona liczba okrążeń
     {
         for (size_t i = 0; i < 64; i++)
         {
