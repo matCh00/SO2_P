@@ -2,7 +2,15 @@
 
 #define FIRST_PAIR 1
 #define SECOND_PAIR 2
+
+// mutexy chronią współdzielone dane 
+// przed równoczesnym dostępem wielu wątków
 mutex mut;
+
+// atomic gwarantuje że nie wystąpi wyścig 
+// danych i jest używany do synchronizowania 
+// dostępu do pamięci między różnymi wątkami
+extern atomic<bool> running_loop;
 
 Bolide::Bolide(int y, int x, int id, int speed, char type, int color)
 {
@@ -110,7 +118,7 @@ void Bolide::movement_long()
         mvright();
     }
 
-    while (true)  // nieskończona liczba okrążeń
+    while (running_loop)  // nieskończona liczba okrążeń - globalna zmienna atomic
     {
         for (size_t i = 0; i < 64; i++)
         {
