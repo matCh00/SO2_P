@@ -120,19 +120,19 @@ void Bolide::movement_long()
 
     while (running_loop)  // nieskończona liczba okrążeń - globalna zmienna atomic
     {
-        for (size_t i = 0; i < 64; i++)
+        for (size_t i = 0; i < 136; i++)
         {
             mvright();
         }
-        for (size_t i = 0; i < 11; i++)
+        for (size_t i = 0; i < 21; i++)
         {
             mvdown();
         }
-        for (size_t i = 0; i < 64; i++)
+        for (size_t i = 0; i < 136; i++)
         {
             mvleft();
         }
-        for (size_t i = 0; i < 11; i++)
+        for (size_t i = 0; i < 21; i++)
         {
             mvup();
         }
@@ -145,7 +145,7 @@ void Bolide::movement_long()
 void Bolide::movement_short()
 {
     // trasa
-    for (size_t i = 0; i < 25; i++)
+    for (size_t i = 0; i < 35; i++)
     {        
         mvdown();
     }

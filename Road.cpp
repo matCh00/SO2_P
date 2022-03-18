@@ -16,55 +16,51 @@ void Road::draw_info()
 
 void Road::draw_speedway()
 {
-    for (size_t i = 20; i < 86; i++)
+    for (size_t i = 20; i < 160; i++)
     {
         if (i % 2 == 0)
         {
             mvprintw(8, i, "*");
-
-            if (i < 85)
-            {
-                mvprintw(26, i, "*");
-            }  
+            mvprintw(36, i, "*");  
         }
     }
-    for (size_t j = 13; j < 21; j++)
+    for (size_t j = 13; j < 31; j++)
     {
         mvprintw(j, 10, "*");
-        mvprintw(j, 96, "*");
+        mvprintw(j, 170, "*");
     }
     for (size_t k = 0; k < 5; k++)
     {
         mvprintw(13 - k, 10 + k * 2, "*");
-        mvprintw(21 + k, 10 + k * 2, "*");
-        mvprintw(25 - k, 86 + k * 2, "*");
-        mvprintw(8 + k, 86 + k * 2, "*");
+        mvprintw(31 + k, 10 + k * 2, "*");
+        mvprintw(35 - k, 160 + k * 2, "*");
+        mvprintw(8 + k, 160 + k * 2, "*");
     }
 
-    for (size_t i = 30; i < 76; i++)
+    for (size_t i = 30; i < 150; i++)
     {
         if (i % 2 == 0)
         {
             mvprintw(15, i, "*");
-            mvprintw(19, i, "*");
+            mvprintw(29, i, "*");
         }   
     }
-    for (size_t j = 16; j < 19; j++)
+    for (size_t j = 16; j < 29; j++)
     {
         mvprintw(j, 28, "*");
-        mvprintw(j, 76, "*");
+        mvprintw(j, 150, "*");
     }
 
-    for (size_t j = 5; j < 30; j++)
+    for (size_t j = 5; j < 40; j++)
     {
-        mvprintw(j, 57, "|");
-        mvprintw(j, 67, "|");
+        mvprintw(j, 111, "|");
+        mvprintw(j, 121, "|");
     }
-    for (size_t k = 58; k < 67; k += 2)
+    for (size_t k = 112; k < 121; k += 2)
     {
         mvprintw(8, k, " ");
         mvprintw(15, k, " ");
-        mvprintw(19, k, " ");
-        mvprintw(26, k, " ");
+        mvprintw(29, k, " ");
+        mvprintw(36, k, " ");
     }
 }

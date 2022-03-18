@@ -45,11 +45,11 @@ int main()
     while (running_loop)
     {        
         int speed_1 = rand() % 41 - 20;
-        Bolide *bolid_1 = new Bolide(11, 15, id, 40 + speed_1, (char)char1++, 1);
+        Bolide *bolid_1 = new Bolide(11, 15, id, 30 + speed_1, (char)char1++, 1);
         threads_1.emplace_back([&](){bolid_1->movement_long();});
 
         int speed_2 = rand() % 21 - 10;
-        Bolide *bolid_2 = new Bolide(4, 62, id++, 50 + speed_2, (char)char2++, 2);
+        Bolide *bolid_2 = new Bolide(4, 116, id++, 50 + speed_2, (char)char2++, 2);
         threads_2.emplace_back([&](){bolid_2->movement_short();});
 
         if (char1 > 90)
