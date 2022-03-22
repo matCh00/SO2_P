@@ -45,7 +45,7 @@ int main()
     while (running_loop)
     {        
         int speed_1 = rand() % 41 - 20;
-        Bolide *bolid_1 = new Bolide(11, 15, id, 30 + speed_1, (char)char1++, 1);
+        Bolide *bolid_1 = new Bolide(11, 15, id, 50 + speed_1, (char)char1++, 1);
         threads_1.emplace_back([&](){bolid_1->movement_long();});
 
         int speed_2 = rand() % 21 - 10;
@@ -61,7 +61,8 @@ int main()
             char2 = 97;
         }
         
-        usleep(1000*1000); 
+        int delay = rand() % 600;
+        usleep((1000+delay)*1000); 
     }
 
     // bezpieczne zakończenie każdego wątku
