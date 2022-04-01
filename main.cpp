@@ -19,6 +19,13 @@ void exit_loop()
     } 
 }
 
+// void exit_loop()
+// {
+//     getch();
+//     running_loop = false;
+//     return;
+// }
+
 int main() 
 {
     initscr(); // inicjalizacja
@@ -78,5 +85,9 @@ int main()
 
 
     endwin(); // koniec ncurses
+
+    threads_1.clear();
+    threads_2.clear();
+    
     return 0;
 }
