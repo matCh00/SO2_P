@@ -46,26 +46,26 @@ int main()
     // wątek wyłączający symulację
     thread thread_3(exit_loop);
 
-    int id = 0, char1 = 65, char2 = 97;
+    int sign1 = 65, sign2 = 97;
 
     // ciągłe tworzenie wątków
     while (running_loop)
     {        
         int speed_1 = rand() % 41 - 20;
-        Bolide *bolid_1 = new Bolide(11, 15, id, 50 + speed_1, (char)char1++, 1);
+        Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1);
         threads_1.emplace_back([&](){bolid_1->movement_long();});
 
         int speed_2 = rand() % 21 - 10;
-        Bolide *bolid_2 = new Bolide(4, 116, id++, 50 + speed_2, (char)char2++, 2);
+        Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2);
         threads_2.emplace_back([&](){bolid_2->movement_short();});
 
-        if (char1 > 90)
+        if (sign1 > 90)
         {
-            char1 = 65;
+            sign1 = 65;
         }
-        if (char2 > 122)
+        if (sign2 > 122)
         {
-            char2 = 97;
+            sign2 = 97;
         }
         
         int delay = rand() % 600;

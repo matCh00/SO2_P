@@ -6,9 +6,13 @@
 class Bolide
 {
 private:
-    int xLoc, yLoc, xMax, yMax, id, speed, color;
-    char type;
-    void dont_override();
+    int xLoc, yLoc, id, speed, color;
+    char sign;
+    bool type;
+    void remove_trace();
+    void detect_collision_down();
+    void detect_collision_right();
+    void detect_collision_left();
     void mvup();
     void mvdown();
     void mvleft();
@@ -17,10 +21,12 @@ private:
     void clear(); 
 
 public:
-    Bolide(int y, int x, int id, int speed, char type, int color);
+    Bolide(int y, int x, bool type, int speed, char sign, int color);
     ~Bolide();
     void movement_long();
     void movement_short();
+    int getX();
+    int getY();
 };
 
 

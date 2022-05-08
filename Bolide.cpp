@@ -5,20 +5,21 @@
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
-mutex mut;
+mutex mut, mtx;
 
 // atomic gwarantuje że nie wystąpi wyścig 
 // danych i jest używany do synchronizowania 
 // dostępu do pamięci między różnymi wątkami
 extern atomic<bool> running_loop;
+//atomic<bool> no_collision;
 
-Bolide::Bolide(int y, int x, int id, int speed, char type, int color)
+Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color)
 {
     this->xLoc = x;
     this->yLoc = y;
-    this->id = id;
-    this->speed = speed;
     this->type = type;
+    this->speed = speed;
+    this->sign = sign;
     this->color = color;
     init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
     init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
@@ -29,7 +30,7 @@ Bolide::~Bolide()
     terminate();
 }
 
-void Bolide::dont_override()
+void Bolide::remove_trace()
 {
     // nie usuwamy konturów po przejechaniu bolidu
     if ((char)mvinch(yLoc, xLoc) != (char)124 && (char)mvinch(yLoc, xLoc) != (char)39)
@@ -38,11 +39,51 @@ void Bolide::dont_override()
     }
 }
 
+void Bolide::detect_collision_down()
+{
+    //lock_guard<mutex> lock(mtx);
+    while (true)
+    {
+        if (!((char)mvinch(yLoc + 1, xLoc) >= (char)65) && !((char)mvinch(yLoc, xLoc) <= (char)90))
+        {
+            break;
+            return;
+        }
+    }
+}
+
+void Bolide::detect_collision_right()
+{
+    //lock_guard<mutex> lock(mtx);
+    while (true)
+    {
+        if (!((char)mvinch(yLoc, xLoc + 1) >= (char)97) && !((char)mvinch(yLoc, xLoc) <= (char)122))
+        {
+            break;
+            return;
+        }
+        
+    }
+}
+
+void Bolide::detect_collision_left()
+{
+    //lock_guard<mutex> lock(mtx);
+    while (true)
+    {
+        if (!((char)mvinch(yLoc, xLoc - 1) >= (char)97) && !((char)mvinch(yLoc, xLoc) <= (char)122))
+        {
+            break;
+            return;
+        }
+    }
+}
+
 void Bolide::mvup()
 {
     this_thread::sleep_for(chrono::milliseconds(speed*2));
     mut.lock();
-    dont_override();
+    remove_trace();
     yLoc--;
     display();
 }
@@ -51,7 +92,11 @@ void Bolide::mvdown()
 {
     this_thread::sleep_for(chrono::milliseconds(speed*2));
     mut.lock();
-    dont_override();
+
+    //lock_guard<mutex> lock(mtx);
+    //detect_collision_down();
+
+    remove_trace();
     yLoc++;
     display();
 }
@@ -59,7 +104,11 @@ void Bolide::mvdown()
 void Bolide::mvleft()
 {
     mut.lock();
-    dont_override();
+
+    //lock_guard<mutex> lock(mtx);
+    //detect_collision_left();
+
+    remove_trace();
     xLoc--;
     display();
 }
@@ -67,7 +116,11 @@ void Bolide::mvleft()
 void Bolide::mvright()
 {
     mut.lock();
-    dont_override();
+
+    //lock_guard<mutex> lock(mtx);
+    //detect_collision_right();
+    
+    remove_trace();
     xLoc++; 
     display();
 }
@@ -85,26 +138,14 @@ void Bolide::display()
     // pobranie znaku z bieżącej pozycji
     char lastChar = (char)mvinch(yLoc, xLoc);
 
-    if (type == 'X')
+    attron(COLOR_PAIR(color));
+    // nie nadpisujemy konturów trasy
+    if (lastChar != (char)124 && lastChar != (char)39)
     {
-        attron(COLOR_PAIR(color));
-        // nie nadpisujemy konturów trasy
-        if (lastChar != (char)124 && lastChar != (char)39)
-        {
-            mvprintw(yLoc, xLoc, "%c", type);
-        }
-        attroff(COLOR_PAIR(color));
+        mvprintw(yLoc, xLoc, "%c", sign);
     }
-    else
-    {
-        attron(COLOR_PAIR(color));
-        // nie nadpisujemy konturów trasy
-        if (lastChar != (char)124 && lastChar != (char)39)
-        {
-            mvprintw(yLoc, xLoc, "%c", type);
-        }
-        attroff(COLOR_PAIR(color));
-    }
+    attroff(COLOR_PAIR(color));
+    
     refresh();
     mut.unlock();
     this_thread::sleep_for(chrono::milliseconds(speed));
@@ -148,8 +189,19 @@ void Bolide::movement_short()
     for (size_t i = 0; i < 35; i++)
     {        
         mvdown();
+        //detect_collision();
     }
     
     // usunięcie znaku
     clear();
+}
+
+int Bolide::getX()
+{
+    return xLoc;
+}
+
+int Bolide::getY()
+{
+    return yLoc;
 }
