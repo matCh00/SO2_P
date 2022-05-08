@@ -1,19 +1,15 @@
 #include "Bolide.hpp"
 
-#define FIRST_PAIR 1
-#define SECOND_PAIR 2
-
-// mutexy chronią współdzielone dane 
-// przed równoczesnym dostępem wielu wątków
-mutex mut, mtx;
-
 // atomic gwarantuje że nie wystąpi wyścig 
 // danych i jest używany do synchronizowania 
 // dostępu do pamięci między różnymi wątkami
 extern atomic<bool> running_loop;
-//atomic<bool> no_collision;
 
-Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color)
+extern map <int, tuple<int, int, char, int>> bolide1_map;
+extern map <int, tuple<int, int, char, int>> bolide2_map;
+
+
+Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color, int id)
 {
     this->xLoc = x;
     this->yLoc = y;
@@ -21,8 +17,7 @@ Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color)
     this->speed = speed;
     this->sign = sign;
     this->color = color;
-    init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
+    this->id = id;
 }
 
 Bolide::~Bolide()
@@ -30,125 +25,78 @@ Bolide::~Bolide()
     terminate();
 }
 
-void Bolide::remove_trace()
+bool Bolide::check_collision(char nextChar, char nextNextChar)
 {
-    // nie usuwamy konturów po przejechaniu bolidu
-    if ((char)mvinch(yLoc, xLoc) != (char)124 && (char)mvinch(yLoc, xLoc) != (char)39)
-    {
-        mvprintw(yLoc, xLoc, " ");
-    }
-}
-
-void Bolide::detect_collision_down()
-{
-    //lock_guard<mutex> lock(mtx);
-    while (true)
-    {
-        if (!((char)mvinch(yLoc + 1, xLoc) >= (char)65) && !((char)mvinch(yLoc, xLoc) <= (char)90))
-        {
-            break;
-            return;
-        }
-    }
-}
-
-void Bolide::detect_collision_right()
-{
-    //lock_guard<mutex> lock(mtx);
-    while (true)
-    {
-        if (!((char)mvinch(yLoc, xLoc + 1) >= (char)97) && !((char)mvinch(yLoc, xLoc) <= (char)122))
-        {
-            break;
-            return;
-        }
-        
-    }
-}
-
-void Bolide::detect_collision_left()
-{
-    //lock_guard<mutex> lock(mtx);
-    while (true)
-    {
-        if (!((char)mvinch(yLoc, xLoc - 1) >= (char)97) && !((char)mvinch(yLoc, xLoc) <= (char)122))
-        {
-            break;
-            return;
-        }
-    }
+    return ((((int)nextChar > 96 && (int)nextChar < 123 && (int)sign < 96) || ((int)nextChar > 64 && (int)nextChar < 91 && (int)sign > 96)) || 
+    (((int)nextNextChar > 96 && (int)nextNextChar < 123 && (int)sign < 96) || ((int)nextNextChar > 64 && (int)nextNextChar < 91 && (int)sign > 96)));
 }
 
 void Bolide::mvup()
 {
     this_thread::sleep_for(chrono::milliseconds(speed*2));
-    mut.lock();
-    remove_trace();
-    yLoc--;
-    display();
+
+    // pobranie znaku z następnej pozycji
+    char nextChar = (char)mvinch(yLoc - 1, xLoc);
+    char nextNextChar = (char)mvinch(yLoc - 2, xLoc);
+
+    // wykrywamy kolizje na skrzyżowaniach
+    if (check_collision(nextChar, nextNextChar))
+    {
+        this_thread::sleep_for(chrono::milliseconds(speed * 4)); 
+    }
+
+    yLoc--;    
 }
 
 void Bolide::mvdown()
 {
     this_thread::sleep_for(chrono::milliseconds(speed*2));
-    mut.lock();
 
-    //lock_guard<mutex> lock(mtx);
-    //detect_collision_down();
+    // pobranie znaku z następnej pozycji
+    char nextChar = (char)mvinch(yLoc + 1, xLoc);
+    char nextNextChar = (char)mvinch(yLoc + 2, xLoc);
 
-    remove_trace();
-    yLoc++;
-    display();
+    // wykrywamy kolizje na skrzyżowaniach
+    if (check_collision(nextChar, nextNextChar))
+    {
+        this_thread::sleep_for(chrono::milliseconds(speed * 4)); 
+    }
+    
+    yLoc++;     
 }
 
 void Bolide::mvleft()
 {
-    mut.lock();
+    this_thread::sleep_for(chrono::milliseconds(speed));
 
-    //lock_guard<mutex> lock(mtx);
-    //detect_collision_left();
+    // pobranie znaku z następnej pozycji
+    char nextChar = (char)mvinch(yLoc, xLoc - 1);
+    char nextNextChar = (char)mvinch(yLoc, xLoc - 2);
 
-    remove_trace();
-    xLoc--;
-    display();
+    // wykrywamy kolizje na skrzyżowaniach
+    if (check_collision(nextChar, nextNextChar))
+    {
+        this_thread::sleep_for(chrono::milliseconds(speed * 2));
+    }
+    
+    xLoc--; 
 }
 
 void Bolide::mvright()
 {
-    mut.lock();
-
-    //lock_guard<mutex> lock(mtx);
-    //detect_collision_right();
-    
-    remove_trace();
-    xLoc++; 
-    display();
-}
-
-void Bolide::clear()
-{
-    mut.lock();
-    mvprintw(yLoc, xLoc, " ");
-    refresh();
-    mut.unlock();
-}
-
-void Bolide::display()
-{
-    // pobranie znaku z bieżącej pozycji
-    char lastChar = (char)mvinch(yLoc, xLoc);
-
-    attron(COLOR_PAIR(color));
-    // nie nadpisujemy konturów trasy
-    if (lastChar != (char)124 && lastChar != (char)39)
-    {
-        mvprintw(yLoc, xLoc, "%c", sign);
-    }
-    attroff(COLOR_PAIR(color));
-    
-    refresh();
-    mut.unlock();
     this_thread::sleep_for(chrono::milliseconds(speed));
+
+    // pobranie znaku z następnej pozycji
+    char nextChar = (char)mvinch(yLoc, xLoc + 1);
+    char nextNextChar = (char)mvinch(yLoc, xLoc + 2);
+
+    // wykrywamy kolizje na skrzyżowaniach
+    if (check_collision(nextChar, nextNextChar))
+    {
+        this_thread::sleep_for(chrono::milliseconds(speed * 2));
+    }
+
+    xLoc++;
 }
 
 void Bolide::movement_long()
@@ -157,6 +105,7 @@ void Bolide::movement_long()
     for (size_t i = 0; i < 5; i++)
     {
         mvright();
+        bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
     }
 
     while (running_loop)  // nieskończona liczba okrążeń - globalna zmienna atomic
@@ -164,23 +113,24 @@ void Bolide::movement_long()
         for (size_t i = 0; i < 136; i++)
         {
             mvright();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
         }
         for (size_t i = 0; i < 21; i++)
         {
             mvdown();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 2);
         }
         for (size_t i = 0; i < 136; i++)
         {
             mvleft();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 3);
         }
         for (size_t i = 0; i < 21; i++)
         {
             mvup();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 4);
         }
     }
-
-    // usunięcie znaku
-    clear();
 }
 
 void Bolide::movement_short()
@@ -189,19 +139,6 @@ void Bolide::movement_short()
     for (size_t i = 0; i < 35; i++)
     {        
         mvdown();
-        //detect_collision();
+        bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
     }
-    
-    // usunięcie znaku
-    clear();
-}
-
-int Bolide::getX()
-{
-    return xLoc;
-}
-
-int Bolide::getY()
-{
-    return yLoc;
 }

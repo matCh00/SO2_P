@@ -6,5 +6,7 @@
 #include <random>
 #include <atomic>
 #include <condition_variable>
+#include <map>
+#include <tuple>
 
 using namespace std;

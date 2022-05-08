@@ -2,10 +2,22 @@
 #include "Road.hpp"
 #include "Bolide.hpp"
 
+#define FIRST_PAIR 1
+#define SECOND_PAIR 2
+
 // atomic gwarantuje że nie wystąpi wyścig 
 // danych i jest używany do synchronizowania 
 // dostępu do pamięci między różnymi wątkami
 atomic<bool> running_loop(true);
+
+// mutexy chronią współdzielone dane 
+// przed równoczesnym dostępem wielu wątków
+mutex mut, mtx;
+
+// mapy bolidów
+map <int, tuple<int, int, char, int>> bolide1_map;
+map <int, tuple<int, int, char, int>> bolide2_map;
+
 
 void exit_loop()
 {
@@ -19,12 +31,129 @@ void exit_loop()
     } 
 }
 
-// void exit_loop()
-// {
-//     getch();
-//     running_loop = false;
-//     return;
-// }
+void display_bolides()
+{
+    while (true)
+    {
+        mut.lock(); 
+
+        for (auto m1 : bolide1_map)
+        {
+            int x1 = get<0>(m1.second);
+            int y1 = get<1>(m1.second);
+            char s1 = get<2>(m1.second);
+            int direction = get<3>(m1.second);
+
+            switch (direction)
+            {
+            case 1:
+                if ((char)mvinch(y1, x1-1) != (char)124 && (char)mvinch(y1, x1-1) != (char)39)
+                {
+                    mvprintw(y1, x1-1, " ");
+                }
+                break;
+
+            case 2:
+                if ((char)mvinch(y1-1, x1) != (char)124 && (char)mvinch(y1-1, x1) != (char)39)
+                {
+                    mvprintw(y1-1, x1, " ");
+                }
+                break;
+
+            case 3:
+                if ((char)mvinch(y1, x1+1) != (char)124 && (char)mvinch(y1, x1+1) != (char)39)
+                {
+                    mvprintw(y1, x1+1, " ");
+                } 
+                break;
+
+            case 4:
+                if ((char)mvinch(y1+1, x1) != (char)124 && (char)mvinch(y1+1, x1) != (char)39)
+                {
+                    mvprintw(y1+1, x1, " ");
+                }
+                break;
+            
+            default:
+                break;
+            }
+    
+            // pobranie znaku z bieżącej pozycji
+            char lastChar = (char)mvinch(y1, x1);
+
+            // nie nadpisujemy konturów trasy
+            if (lastChar != (char)124 && lastChar != (char)39)
+            {
+                attron(COLOR_PAIR(1));
+                mvprintw(y1, x1, "%c", s1); 
+                attroff(COLOR_PAIR(1));
+            }
+        }
+
+        for (auto m2 : bolide2_map)
+        {
+            int x2 = get<0>(m2.second);
+            int y2 = get<1>(m2.second);
+            char s2 = get<2>(m2.second);
+            int direction = get<3>(m2.second);
+
+            switch (direction)
+            {
+            case 1:
+                if ((char)mvinch(y2, x2-1) != (char)124 && (char)mvinch(y2, x2-1) != (char)39)
+                {
+                    mvprintw(y2, x2-1, " ");
+                }
+                break;
+
+            case 2:
+                if ((char)mvinch(y2-1, x2) != (char)124 && (char)mvinch(y2-1, x2) != (char)39)
+                {
+                    mvprintw(y2-1, x2, " ");
+                }
+                break;
+
+            case 3:
+                if ((char)mvinch(y2, x2+1) != (char)124 && (char)mvinch(y2, x2+1) != (char)39)
+                {
+                    mvprintw(y2, x2+1, " ");
+                }
+                break;
+
+            case 4:
+                if ((char)mvinch(y2+1, x2) != (char)124 && (char)mvinch(y2+1, x2) != (char)39)
+                {
+                    mvprintw(y2+1, x2, " ");
+                }
+                break;
+            
+            default:
+                break;
+            }
+
+            // pobranie znaku z bieżącej pozycji
+            char lastChar = (char)mvinch(y2, x2);
+
+            // nie nadpisujemy konturów trasy
+            if (lastChar != (char)124 && lastChar != (char)39)
+            {
+                attron(COLOR_PAIR(2));
+                mvprintw(y2, x2, "%c", s2); 
+                attroff(COLOR_PAIR(2));
+            }
+        }
+
+        mvprintw(39, 116, " ");
+        mvprintw(11, 20, " "); 
+
+        refresh();
+        
+        mut.unlock();
+
+        int FPS = 60;
+        this_thread::sleep_for(chrono::milliseconds(1000 / FPS)); 
+    }
+}
 
 int main() 
 {
@@ -36,6 +165,9 @@ int main()
 
     srand (time(NULL));
 
+    init_pair(FIRST_PAIR, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(SECOND_PAIR, COLOR_GREEN, COLOR_BLACK);
+
     Road *road = new Road();
     road->draw_info();
     road->draw_speedway();
@@ -46,17 +178,22 @@ int main()
     // wątek wyłączający symulację
     thread thread_3(exit_loop);
 
-    int sign1 = 65, sign2 = 97;
+    // wyświetlanie bolidów
+    thread thread_4(display_bolides);
+    thread_4.detach();
+
+
+    int sign1 = 65, sign2 = 97, id = 0;
 
     // ciągłe tworzenie wątków
     while (running_loop)
     {        
-        int speed_1 = rand() % 41 - 20;
-        Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1);
+        int speed_1 = rand() % 31 - 20;
+        Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1, id++);
         threads_1.emplace_back([&](){bolid_1->movement_long();});
 
         int speed_2 = rand() % 21 - 10;
-        Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2);
+        Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2, id++);
         threads_2.emplace_back([&](){bolid_2->movement_short();});
 
         if (sign1 > 90)
@@ -69,7 +206,7 @@ int main()
         }
         
         int delay = rand() % 600;
-        usleep((1000+delay)*1000); 
+        usleep((1500 + delay)*1000); 
     }
 
     // bezpieczne zakończenie każdego wątku
@@ -82,7 +219,8 @@ int main()
         threads_2[j].join();
     }
     thread_3.join();
-
+    //thread_4.join();
+    thread_4.~thread();
 
     endwin(); // koniec ncurses
 
