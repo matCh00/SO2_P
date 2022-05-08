@@ -5,6 +5,8 @@
 // dostępu do pamięci między różnymi wątkami
 extern atomic<bool> running_loop;
 
+mutex mutx, m1, m2, m3, m4;
+
 extern map <int, tuple<int, int, char, int>> bolide1_map;
 extern map <int, tuple<int, int, char, int>> bolide2_map;
 
@@ -22,13 +24,17 @@ Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color, int id)
 
 Bolide::~Bolide()
 {
-    terminate();
 }
 
-bool Bolide::check_collision(char nextChar, char nextNextChar)
+bool Bolide::check_collision(char next, char nextC, char nextC2, char nextC3, char nextC4, char nextC5)
 {
-    return ((((int)nextChar > 96 && (int)nextChar < 123 && (int)sign < 96) || ((int)nextChar > 64 && (int)nextChar < 91 && (int)sign > 96)) || 
-    (((int)nextNextChar > 96 && (int)nextNextChar < 123 && (int)sign < 96) || ((int)nextNextChar > 64 && (int)nextNextChar < 91 && (int)sign > 96)));
+    return (
+    (((int)next > 96 && (int)next < 123 && (int)sign < 96) || ((int)next > 64 && (int)next < 91 && (int)sign > 96)) || 
+    (((int)nextC > 96 && (int)nextC < 123 && (int)sign < 96) || ((int)nextC > 64 && (int)nextC < 91 && (int)sign > 96)) ||
+    (((int)nextC2 > 96 && (int)nextC2 < 123 && (int)sign < 96) || ((int)nextC2 > 64 && (int)nextC2 < 91 && (int)sign > 96)) ||
+    (((int)nextC3 > 96 && (int)nextC3 < 123 && (int)sign < 96) || ((int)nextC3 > 64 && (int)nextC3 < 91 && (int)sign > 96)) ||
+    (((int)nextC4 > 96 && (int)nextC4 < 123 && (int)sign < 96) || ((int)nextC4 > 64 && (int)nextC4 < 91 && (int)sign > 96)) ||
+    (((int)nextC5 > 96 && (int)nextC5 < 123 && (int)sign < 96) || ((int)nextC5 > 64 && (int)nextC5 < 91 && (int)sign > 96)));
 }
 
 void Bolide::mvup()
@@ -36,13 +42,19 @@ void Bolide::mvup()
     this_thread::sleep_for(chrono::milliseconds(speed*2));
 
     // pobranie znaku z następnej pozycji
+    m1.lock();
     char nextChar = (char)mvinch(yLoc - 1, xLoc);
-    char nextNextChar = (char)mvinch(yLoc - 2, xLoc);
+    char nChar = (char)mvinch(yLoc - 2, xLoc);
+    char nChar2 = (char)mvinch(yLoc - 1, xLoc + 1);
+    char nChar3 = (char)mvinch(yLoc - 1, xLoc - 1);
+    char nChar4 = (char)mvinch(yLoc - 2, xLoc + 1);
+    char nChar5 = (char)mvinch(yLoc - 2, xLoc + 2);
+    m1.unlock();
 
     // wykrywamy kolizje na skrzyżowaniach
-    if (check_collision(nextChar, nextNextChar))
+    if (check_collision(nextChar, nChar, nChar2, nChar3, nChar4, nChar5))
     {
-        this_thread::sleep_for(chrono::milliseconds(speed * 4)); 
+        this_thread::sleep_for(chrono::milliseconds(speed * 6)); 
     }
 
     yLoc--;    
@@ -53,13 +65,19 @@ void Bolide::mvdown()
     this_thread::sleep_for(chrono::milliseconds(speed*2));
 
     // pobranie znaku z następnej pozycji
+    m2.lock();
     char nextChar = (char)mvinch(yLoc + 1, xLoc);
-    char nextNextChar = (char)mvinch(yLoc + 2, xLoc);
+    char nChar = (char)mvinch(yLoc + 2, xLoc);
+    char nChar2 = (char)mvinch(yLoc + 1, xLoc + 1);
+    char nChar3 = (char)mvinch(yLoc + 1, xLoc - 1);
+    char nChar4 = (char)mvinch(yLoc + 2, xLoc + 1);
+    char nChar5 = (char)mvinch(yLoc + 2, xLoc + 2);
+    m2.unlock();
 
     // wykrywamy kolizje na skrzyżowaniach
-    if (check_collision(nextChar, nextNextChar))
+    if (check_collision(nextChar, nChar, nChar2, nChar3, nChar4, nChar5))
     {
-        this_thread::sleep_for(chrono::milliseconds(speed * 4)); 
+        this_thread::sleep_for(chrono::milliseconds(speed * 6)); 
     }
     
     yLoc++;     
@@ -70,13 +88,19 @@ void Bolide::mvleft()
     this_thread::sleep_for(chrono::milliseconds(speed));
 
     // pobranie znaku z następnej pozycji
+    m3.lock();
     char nextChar = (char)mvinch(yLoc, xLoc - 1);
-    char nextNextChar = (char)mvinch(yLoc, xLoc - 2);
+    char nChar = (char)mvinch(yLoc, xLoc - 2);
+    char nChar2 = (char)mvinch(yLoc + 1, xLoc - 1);
+    char nChar3 = (char)mvinch(yLoc - 1, xLoc - 1);
+    char nChar4 = (char)mvinch(yLoc + 2, xLoc - 2);
+    char nChar5 = (char)mvinch(yLoc - 2, xLoc - 2);
+    m3.unlock();
 
     // wykrywamy kolizje na skrzyżowaniach
-    if (check_collision(nextChar, nextNextChar))
+    if (check_collision(nextChar, nChar, nChar2, nChar3, nChar4, nChar5))
     {
-        this_thread::sleep_for(chrono::milliseconds(speed * 2));
+        this_thread::sleep_for(chrono::milliseconds(speed * 3));
     }
     
     xLoc--; 
@@ -87,13 +111,19 @@ void Bolide::mvright()
     this_thread::sleep_for(chrono::milliseconds(speed));
 
     // pobranie znaku z następnej pozycji
+    m4.lock();
     char nextChar = (char)mvinch(yLoc, xLoc + 1);
-    char nextNextChar = (char)mvinch(yLoc, xLoc + 2);
+    char nChar = (char)mvinch(yLoc, xLoc + 2);
+    char nChar2 = (char)mvinch(yLoc + 1, xLoc + 1);
+    char nChar3 = (char)mvinch(yLoc - 1, xLoc + 1);
+    char nChar4 = (char)mvinch(yLoc + 2, xLoc + 2);
+    char nChar5 = (char)mvinch(yLoc - 2, xLoc + 2);
+    m4.unlock();
 
     // wykrywamy kolizje na skrzyżowaniach
-    if (check_collision(nextChar, nextNextChar))
+    if (check_collision(nextChar, nChar, nChar2, nChar3, nChar4, nChar5))
     {
-        this_thread::sleep_for(chrono::milliseconds(speed * 2));
+        this_thread::sleep_for(chrono::milliseconds(speed * 3));
     }
 
     xLoc++;

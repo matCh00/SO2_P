@@ -12,30 +12,34 @@ atomic<bool> running_loop(true);
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
-mutex mut, mtx;
+mutex mut, mut1, mut2, mut3, mut4;
 
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
 map <int, tuple<int, int, char, int>> bolide2_map;
 
+// wektory wątków
+vector<thread> threads_1;
+vector<thread> threads_2;
+
 
 void exit_loop()
 {
-    while (true)
+    while (running_loop)
     {
-        if(getchar())
+        if(getch())
         {
             running_loop = false;
-            return;
         }
     } 
+    return;
 }
 
 void display_bolides()
 {
     while (true)
     {
-        mut.lock(); 
+        //mut1.lock();
 
         for (auto m1 : bolide1_map)
         {
@@ -43,6 +47,8 @@ void display_bolides()
             int y1 = get<1>(m1.second);
             char s1 = get<2>(m1.second);
             int direction = get<3>(m1.second);
+
+            mut1.lock(); 
 
             switch (direction)
             {
@@ -77,7 +83,11 @@ void display_bolides()
             default:
                 break;
             }
-    
+
+            //mut1.unlock();
+
+            //mut2.lock();
+
             // pobranie znaku z bieżącej pozycji
             char lastChar = (char)mvinch(y1, x1);
 
@@ -88,6 +98,8 @@ void display_bolides()
                 mvprintw(y1, x1, "%c", s1); 
                 attroff(COLOR_PAIR(1));
             }
+
+            mut1.unlock();
         }
 
         for (auto m2 : bolide2_map)
@@ -96,6 +108,8 @@ void display_bolides()
             int y2 = get<1>(m2.second);
             char s2 = get<2>(m2.second);
             int direction = get<3>(m2.second);
+
+            mut3.lock(); 
 
             switch (direction)
             {
@@ -131,6 +145,10 @@ void display_bolides()
                 break;
             }
 
+            //mut3.unlock();
+
+            //mut4.lock();
+
             // pobranie znaku z bieżącej pozycji
             char lastChar = (char)mvinch(y2, x2);
 
@@ -140,18 +158,50 @@ void display_bolides()
                 attron(COLOR_PAIR(2));
                 mvprintw(y2, x2, "%c", s2); 
                 attroff(COLOR_PAIR(2));
-            }
+            } 
+            
+            mut3.unlock();
         }
 
+        mut.lock(); 
         mvprintw(39, 116, " ");
         mvprintw(11, 20, " "); 
-
-        refresh();
-        
         mut.unlock();
 
-        int FPS = 60;
+        refresh();
+ 
+        int FPS = 240;
         this_thread::sleep_for(chrono::milliseconds(1000 / FPS)); 
+    }
+}
+
+void create_threads()
+{
+    int sign1 = 65, sign2 = 97, id = 0;
+
+    // ciągłe tworzenie wątków
+    while (running_loop)
+    {    
+        int speed_1 = rand() % 31 - 20;
+        Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1, id++);
+        threads_1.emplace_back([&](){bolid_1->movement_long();});
+
+        int speed_2 = rand() % 21 - 10;
+        Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2, id++);
+        threads_2.emplace_back([&](){bolid_2->movement_short();});
+
+        if (sign1 > 90)
+        {
+            sign1 = 65;
+        }
+        if (sign2 > 122)
+        {
+            sign2 = 97;
+        }
+        
+        int delay = rand() % 600;
+        //this_thread::sleep_for(chrono::milliseconds(1000 + delay)); 
+        usleep((1000 + delay) * 1000); 
     }
 }
 
@@ -172,43 +222,19 @@ int main()
     road->draw_info();
     road->draw_speedway();
 
-    vector<thread> threads_1;
-    vector<thread> threads_2;
-
-    // wątek wyłączający symulację
-    thread thread_3(exit_loop);
-
+    
     // wyświetlanie bolidów
     thread thread_4(display_bolides);
     thread_4.detach();
 
+    // wątek wyłączający symulację
+    thread thread_3(exit_loop);
 
-    int sign1 = 65, sign2 = 97, id = 0;
+    // tworzenie wątków
+    //thread thread_5(create_threads);
+    create_threads();
 
-    // ciągłe tworzenie wątków
-    while (running_loop)
-    {        
-        int speed_1 = rand() % 31 - 20;
-        Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1, id++);
-        threads_1.emplace_back([&](){bolid_1->movement_long();});
-
-        int speed_2 = rand() % 21 - 10;
-        Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2, id++);
-        threads_2.emplace_back([&](){bolid_2->movement_short();});
-
-        if (sign1 > 90)
-        {
-            sign1 = 65;
-        }
-        if (sign2 > 122)
-        {
-            sign2 = 97;
-        }
-        
-        int delay = rand() % 600;
-        usleep((1500 + delay)*1000); 
-    }
-
+    
     // bezpieczne zakończenie każdego wątku
     for (size_t j = 0; j < threads_1.size(); j++)
     {
@@ -220,12 +246,16 @@ int main()
     }
     thread_3.join();
     //thread_4.join();
+    //thread_5.join();
     thread_4.~thread();
+    
 
     endwin(); // koniec ncurses
 
     threads_1.clear();
     threads_2.clear();
-    
+    bolide1_map.clear();
+    bolide2_map.clear();
+
     return 0;
 }
