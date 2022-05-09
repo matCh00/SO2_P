@@ -12,7 +12,7 @@ atomic<bool> running_loop(true);
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
-mutex mut, mut1, mut2, mut3, mut4;
+mutex mut1, mut2, mut3;
 
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
@@ -35,12 +35,11 @@ void exit_loop()
     return;
 }
 
+
 void display_bolides()
 {
     while (true)
     {
-        //mut1.lock();
-
         for (auto m1 : bolide1_map)
         {
             int x1 = get<0>(m1.second);
@@ -50,6 +49,7 @@ void display_bolides()
 
             mut1.lock(); 
 
+            // czyszczenie poprzedniej pozycji przed kolejnym ruchem
             switch (direction)
             {
             case 1:
@@ -84,16 +84,13 @@ void display_bolides()
                 break;
             }
 
-            //mut1.unlock();
-
-            //mut2.lock();
-
             // pobranie znaku z bieżącej pozycji
-            char lastChar = (char)mvinch(y1, x1);
+            char pos = (char)mvinch(y1, x1);
 
             // nie nadpisujemy konturów trasy
-            if (lastChar != (char)124 && lastChar != (char)39)
+            if (pos != (char)124 && pos != (char)39)
             {
+                // bolid na nowej pozycji
                 attron(COLOR_PAIR(1));
                 mvprintw(y1, x1, "%c", s1); 
                 attroff(COLOR_PAIR(1));
@@ -109,8 +106,9 @@ void display_bolides()
             char s2 = get<2>(m2.second);
             int direction = get<3>(m2.second);
 
-            mut3.lock(); 
+            mut2.lock(); 
 
+            // czyszczenie poprzedniej pozycji przed kolejnym ruchem
             switch (direction)
             {
             case 1:
@@ -145,35 +143,33 @@ void display_bolides()
                 break;
             }
 
-            //mut3.unlock();
-
-            //mut4.lock();
-
             // pobranie znaku z bieżącej pozycji
-            char lastChar = (char)mvinch(y2, x2);
+            char pos = (char)mvinch(y2, x2);
 
             // nie nadpisujemy konturów trasy
-            if (lastChar != (char)124 && lastChar != (char)39)
+            if (pos != (char)124 && pos != (char)39)
             {
+                // bolid na nowej pozycji
                 attron(COLOR_PAIR(2));
                 mvprintw(y2, x2, "%c", s2); 
                 attroff(COLOR_PAIR(2));
             } 
             
-            mut3.unlock();
+            mut2.unlock();
         }
 
-        mut.lock(); 
+        mut3.lock(); 
+        // wyczyszczenie pozycji na których kończą się wątki
         mvprintw(39, 116, " ");
         mvprintw(11, 20, " "); 
-        mut.unlock();
+        mut3.unlock();
 
         refresh();
  
-        int FPS = 240;
-        this_thread::sleep_for(chrono::milliseconds(1000 / FPS)); 
+        this_thread::sleep_for(chrono::milliseconds(5)); 
     }
 }
+
 
 void create_threads()
 {
@@ -200,10 +196,10 @@ void create_threads()
         }
         
         int delay = rand() % 600;
-        //this_thread::sleep_for(chrono::milliseconds(1000 + delay)); 
         usleep((1000 + delay) * 1000); 
     }
 }
+
 
 int main() 
 {
@@ -223,17 +219,18 @@ int main()
     road->draw_speedway();
 
     
-    // wyświetlanie bolidów
+    // wątek - wyświetlanie bolidów
     thread thread_4(display_bolides);
+    // detach - potrzebne do natychmiastowego kończenia wątku metodą ~thread()
     thread_4.detach();
 
-    // wątek wyłączający symulację
+    // wątek - koniec symulacji
     thread thread_3(exit_loop);
 
     // tworzenie wątków
-    //thread thread_5(create_threads);
     create_threads();
-
+    //thread thread_5(create_threads);
+    
     
     // bezpieczne zakończenie każdego wątku
     for (size_t j = 0; j < threads_1.size(); j++)
@@ -245,8 +242,10 @@ int main()
         threads_2[j].join();
     }
     thread_3.join();
-    //thread_4.join();
-    //thread_5.join();
+
+    // natychmiastowe kończenie wątku
+    // dlaczego tak? dzięki temu wyświetlamy pojazdy do momentu zakończenia wątku każdego pojazdu
+    // bez tego ekran się zamraża a wątki każdego pojazdu po zakończeniu ich tworzenia kończą się bez wizualizacji
     thread_4.~thread();
     
 

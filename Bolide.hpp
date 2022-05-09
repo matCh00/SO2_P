@@ -13,7 +13,6 @@ private:
     void mvdown();
     void mvleft();
     void mvright();
-    bool check_collision(char next, char nextC, char nextC2, char nextC3, char nextC4, char nextC5);
 
 public:
     Bolide(int y, int x, bool type, int speed, char sign, int color, int id);
