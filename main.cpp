@@ -12,7 +12,7 @@ atomic<bool> running_loop(true);
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
-mutex mut1, mut2, mut3;
+mutex mut1, mut2;
 
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
@@ -46,8 +46,6 @@ void display_bolides()
             int y1 = get<1>(m1.second);
             char s1 = get<2>(m1.second);
             int direction = get<3>(m1.second);
-
-            mut1.lock(); 
 
             // czyszczenie poprzedniej pozycji przed kolejnym ruchem
             switch (direction)
@@ -95,8 +93,6 @@ void display_bolides()
                 mvprintw(y1, x1, "%c", s1); 
                 attroff(COLOR_PAIR(1));
             }
-
-            mut1.unlock();
         }
 
         for (auto m2 : bolide2_map)
@@ -104,9 +100,7 @@ void display_bolides()
             int x2 = get<0>(m2.second);
             int y2 = get<1>(m2.second);
             char s2 = get<2>(m2.second);
-            int direction = get<3>(m2.second);
-
-            mut2.lock(); 
+            int direction = get<3>(m2.second); 
 
             // czyszczenie poprzedniej pozycji przed kolejnym ruchem
             switch (direction)
@@ -154,15 +148,11 @@ void display_bolides()
                 mvprintw(y2, x2, "%c", s2); 
                 attroff(COLOR_PAIR(2));
             } 
-            
-            mut2.unlock();
         }
 
-        mut3.lock(); 
         // wyczyszczenie pozycji na których kończą się wątki
         mvprintw(39, 116, " ");
         mvprintw(11, 20, " "); 
-        mut3.unlock();
 
         refresh();
  
