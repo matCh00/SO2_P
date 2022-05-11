@@ -75,7 +75,7 @@ void Bolide::mvleft()
 
             if ((y2 == yLoc && x2 == xLoc) || (y2 == yLoc && x2 == xLoc - 1) || (y2 == yLoc && x2 == xLoc - 2) || (y2 == yLoc && x2 == xLoc - 3))
             {
-                this_thread::sleep_for(chrono::milliseconds(speed * 6)); 
+                this_thread::sleep_for(chrono::milliseconds(speed * 6)); // mutex albo condition variable
                 break;
             } 
         }
