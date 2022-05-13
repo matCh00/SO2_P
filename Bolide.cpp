@@ -9,6 +9,20 @@ extern atomic<bool> running_loop;
 extern map <int, tuple<int, int, char, int>> bolide1_map;
 extern map <int, tuple<int, int, char, int>> bolide2_map;
 
+// zarządzanie skrzyżowaniami
+extern atomic<bool> vertical_first_free;
+extern atomic<bool> vertical_second_free;
+extern atomic<bool> horizontal_first_free;
+extern atomic<bool> horizontal_second_free;
+
+// mutexy chronią współdzielone dane 
+// przed równoczesnym dostępem wielu wątków
+extern mutex h1_m, h2_m, v1_m, v2_m;
+
+// zmienne warynkowe to obiekty które mogą blokować wątek 
+// wywołujący dopóki nie zostanie powiadomiony o wznowieniu
+extern condition_variable h1_cv, h2_cv, v1_cv, v2_cv;
+
 
 Bolide::Bolide(int y, int x, bool type, int speed, char sign, int color, int id)
 {
@@ -39,49 +53,7 @@ void Bolide::mvdown()
 {
     this_thread::sleep_for(chrono::milliseconds(speed*2));
 
-    // dla bolidów jadących w dół
-    if (type == 1)
-    {
-        // sprawdzamy położenie bolidów jeżdżących w kółko
-        for (auto m1 : bolide1_map)
-        {
-            int x1 = get<0>(m1.second);
-            int y1 = get<1>(m1.second);
-
-            if ((y1 == yLoc && x1 == xLoc) || (y1 == yLoc + 1 && x1 == xLoc) || (y1 == yLoc + 2 && x1 == xLoc) || (y1 == yLoc + 3 && x1 == xLoc))
-            {
-                this_thread::sleep_for(chrono::milliseconds(speed * 6)); 
-                break;
-            } 
-        }
-    }
-    
-    yLoc++;     
-}
-
-
-void Bolide::mvleft()
-{
-    this_thread::sleep_for(chrono::milliseconds(speed));
-
-    // dla bolidów jeżdżących w kółko
-    if (type == 0)
-    {
-        // sprawdzamy położenie bolidów jadących w dół
-        for (auto m2 : bolide2_map)
-        {
-            int x2 = get<0>(m2.second);
-            int y2 = get<1>(m2.second);
-
-            if ((y2 == yLoc && x2 == xLoc) || (y2 == yLoc && x2 == xLoc - 1) || (y2 == yLoc && x2 == xLoc - 2) || (y2 == yLoc && x2 == xLoc - 3))
-            {
-                this_thread::sleep_for(chrono::milliseconds(speed * 6)); // mutex albo condition variable
-                break;
-            } 
-        }
-    }
-    
-    xLoc--; 
+    yLoc++; 
 }
 
 
@@ -89,24 +61,15 @@ void Bolide::mvright()
 {
     this_thread::sleep_for(chrono::milliseconds(speed));
 
-    // dla bolidów jeżdżących w kółko
-    if (type == 0)
-    {
-        // sprawdzamy położenie bolidów jadących w dół
-        for (auto m2 : bolide2_map)
-        {
-            int x2 = get<0>(m2.second);
-            int y2 = get<1>(m2.second);
-
-            if ((y2 == yLoc && x2 == xLoc) || (y2 == yLoc && x2 == xLoc + 1) || (y2 == yLoc && x2 == xLoc + 2) || (y2 == yLoc && x2 == xLoc + 3))
-            {
-                this_thread::sleep_for(chrono::milliseconds(speed * 6)); 
-                break;
-            } 
-        }
-    }
-
     xLoc++;
+}
+
+
+void Bolide::mvleft()
+{
+    this_thread::sleep_for(chrono::milliseconds(speed));
+    
+    xLoc--; 
 }
 
 
@@ -123,6 +86,17 @@ void Bolide::movement_long()
     {
         for (size_t i = 0; i < 136; i++)
         {
+            // zatrzymuje się przed pierwszym skrzyżowaniem
+            if (xLoc == 110)
+            {
+                // SEKCJA KRYTYCZNA
+
+                // zablokowanie konkretnego wątku
+                unique_lock<mutex> ul(h1_m);
+                // zmienna warunkowa czekanie na wznowienie
+                h1_cv.wait(ul, [] {return vertical_first_free == true;});
+            }
+
             mvright();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
         }
@@ -133,6 +107,17 @@ void Bolide::movement_long()
         }
         for (size_t i = 0; i < 136; i++)
         {
+            // zatrzymuje się przed drugim skrzyżowaniem
+            if (xLoc == 122)
+            {
+                // SEKCJA KRYTYCZNA
+
+                // zablokowanie konkretnego wątku
+                unique_lock<mutex> ul(h2_m);
+                // zmienna warunkowa czekanie na wznowienie
+                h2_cv.wait(ul, [] {return vertical_second_free == true;});
+            }
+
             mvleft();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 3);
         }
@@ -149,7 +134,33 @@ void Bolide::movement_short()
 {
     // trasa
     for (size_t i = 0; i < 35; i++)
-    {        
+    {
+        // dla bolidów jadących w dół
+        if (type == 1)
+        {
+            // zatrzymuje się przed pierwszym skrzyżowaniem
+            if (yLoc == 8)
+            {
+                // SEKCJA KRYTYCZNA
+
+                // zablokowanie konkretnego wątku
+                unique_lock<mutex> ul(v1_m);
+                // zmienna warunkowa czekanie na wznowienie
+                v1_cv.wait(ul, [] {return horizontal_first_free == true;});
+            }
+
+            // zatrzymuje się przed drugim skrzyżowaniem
+            else if (yLoc == 29)
+            {
+                // SEKCJA KRYTYCZNA
+
+                // zablokowanie konkretnego wątku
+                unique_lock<mutex> ul(v2_m);
+                // zmienna warunkowa czekanie na wznowienie
+                v2_cv.wait(ul, [] {return horizontal_second_free == true;});
+            }
+        }
+
         mvdown();
         bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
     }

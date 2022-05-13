@@ -10,10 +10,6 @@
 // dostępu do pamięci między różnymi wątkami
 atomic<bool> running_loop(true);
 
-// mutexy chronią współdzielone dane 
-// przed równoczesnym dostępem wielu wątków
-mutex mut1, mut2;
-
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
 map <int, tuple<int, int, char, int>> bolide2_map;
@@ -21,6 +17,20 @@ map <int, tuple<int, int, char, int>> bolide2_map;
 // wektory wątków
 vector<thread> threads_1;
 vector<thread> threads_2;
+
+// zarządzanie skrzyżowaniami
+atomic<bool> vertical_first_free(true);
+atomic<bool> vertical_second_free(true);
+atomic<bool> horizontal_first_free(true);
+atomic<bool> horizontal_second_free(true);
+
+// mutexy chronią współdzielone dane 
+// przed równoczesnym dostępem wielu wątków
+mutex h1_m, h2_m, v1_m, v2_m;
+
+// zmienne warynkowe to obiekty które mogą blokować wątek 
+// wywołujący dopóki nie zostanie powiadomiony o wznowieniu
+condition_variable h1_cv, h2_cv, v1_cv, v2_cv;
 
 
 void exit_loop()
@@ -33,6 +43,57 @@ void exit_loop()
         }
     } 
     return;
+}
+
+
+bool if_horizontal_first_busy()
+{
+    for (int i = 112; i <= 120; i++)
+    {
+        if (((char)mvinch(11, i) >= 65) && ((char)mvinch(11, i) <= 90))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool if_horizontal_second_busy()
+{
+    for (int i = 112; i <= 120; i++)
+    {
+        if (((char)mvinch(32, i) >= 65) && ((char)mvinch(32, i) <= 90))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool if_vertical_first_busy()
+{
+    //for (int i = 8; i <= 14; i++)
+    for (int i = 7; i <= 12; i++)
+    {
+        if (((char)mvinch(i, 116) >= 97) && ((char)mvinch(i, 116) <= 122))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool if_vertical_second_busy()
+{
+    //for (int i = 29; i <= 35; i++)
+    for (int i = 28; i <= 33; i++)
+    {
+        if (((char)mvinch(i, 116) >= 97) && ((char)mvinch(i, 116) <= 122))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -155,7 +216,62 @@ void display_bolides()
         mvprintw(11, 20, " "); 
 
         refresh();
- 
+
+        
+        // sprawdzenie przejezdności na skrzyżowaniach
+        if (if_horizontal_first_busy() == true)
+        {
+            // utrzymanie objektu mutex zablokowanego
+            lock_guard<mutex> lg(v1_m);
+            horizontal_first_free = false;
+        }
+        else
+        {
+            horizontal_first_free = true;
+            // powiadomienie zmiennej warunkowej o zdjęciu blokady
+            v1_cv.notify_all();
+        }
+            
+        if (if_horizontal_second_busy() == true)
+        {
+            // utrzymanie objektu mutex zablokowanego
+            lock_guard<mutex> lg(v2_m);
+            horizontal_second_free = false;
+        }
+        else
+        {
+            horizontal_second_free = true;
+            // powiadomienie zmiennej warunkowej o zdjęciu blokady
+            v2_cv.notify_all();
+        }  
+
+        if (if_vertical_first_busy() == true)
+        {
+            // utrzymanie objektu mutex zablokowanego
+            lock_guard<mutex> lg(h1_m);
+            vertical_first_free = false;
+        }  
+        else
+        {
+            vertical_first_free = true;
+            // powiadomienie zmiennej warunkowej o zdjęciu blokady
+            h1_cv.notify_all();
+        } 
+
+        if (if_vertical_second_busy() == true)
+        {
+            // utrzymanie objektu mutex zablokowanego
+            lock_guard<mutex> lg(h2_m);
+            vertical_second_free = false;
+        } 
+        else
+        {
+            vertical_second_free = true;
+            // powiadomienie zmiennej warunkowej o zdjęciu blokady
+            h2_cv.notify_all();
+        }
+            
+
         this_thread::sleep_for(chrono::milliseconds(5)); 
     }
 }
@@ -168,11 +284,11 @@ void create_threads()
     // ciągłe tworzenie wątków
     while (running_loop)
     {    
-        int speed_1 = rand() % 31 - 20;
+        int speed_1 = rand() % 31 - 10;
         Bolide *bolid_1 = new Bolide(11, 15, 0, 50 + speed_1, (char)sign1++, 1, id++);
         threads_1.emplace_back([&](){bolid_1->movement_long();});
 
-        int speed_2 = rand() % 21 - 10;
+        int speed_2 = rand() % 31 - 10;
         Bolide *bolid_2 = new Bolide(4, 116, 1, 50 + speed_2, (char)sign2++, 2, id++);
         threads_2.emplace_back([&](){bolid_2->movement_short();});
 
