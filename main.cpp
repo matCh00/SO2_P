@@ -10,6 +10,12 @@
 // dostępu do pamięci między różnymi wątkami
 atomic<bool> running_loop(true);
 
+// liczniki
+atomic <unsigned int> vertical_first_count(0);
+atomic <unsigned int> vertical_second_count(0);
+atomic <unsigned int> horizontal_first_count(0);
+atomic <unsigned int> horizontal_second_count(0);
+
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
 map <int, tuple<int, int, char, int>> bolide2_map;
@@ -17,12 +23,6 @@ map <int, tuple<int, int, char, int>> bolide2_map;
 // wektory wątków
 vector<thread> threads_1;
 vector<thread> threads_2;
-
-// zarządzanie skrzyżowaniami
-atomic<bool> vertical_first_free(true);
-atomic<bool> vertical_second_free(true);
-atomic<bool> horizontal_first_free(true);
-atomic<bool> horizontal_second_free(true);
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
@@ -43,57 +43,6 @@ void exit_loop()
         }
     } 
     return;
-}
-
-
-bool if_horizontal_first_busy()
-{
-    for (int i = 112; i <= 120; i++)
-    {
-        if (((char)mvinch(11, i) >= 65) && ((char)mvinch(11, i) <= 90))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool if_horizontal_second_busy()
-{
-    for (int i = 112; i <= 120; i++)
-    {
-        if (((char)mvinch(32, i) >= 65) && ((char)mvinch(32, i) <= 90))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool if_vertical_first_busy()
-{
-    //for (int i = 8; i <= 14; i++)
-    for (int i = 7; i <= 12; i++)
-    {
-        if (((char)mvinch(i, 116) >= 97) && ((char)mvinch(i, 116) <= 122))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool if_vertical_second_busy()
-{
-    //for (int i = 29; i <= 35; i++)
-    for (int i = 28; i <= 33; i++)
-    {
-        if (((char)mvinch(i, 116) >= 97) && ((char)mvinch(i, 116) <= 122))
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 
@@ -216,63 +165,8 @@ void display_bolides()
         mvprintw(11, 20, " "); 
 
         refresh();
-
-        
-        // sprawdzenie przejezdności na skrzyżowaniach
-        if (if_horizontal_first_busy() == true)
-        {
-            // utrzymanie objektu mutex zablokowanego
-            lock_guard<mutex> lg(v1_m);
-            horizontal_first_free = false;
-        }
-        else
-        {
-            horizontal_first_free = true;
-            // powiadomienie zmiennej warunkowej o zdjęciu blokady
-            v1_cv.notify_all();
-        }
             
-        if (if_horizontal_second_busy() == true)
-        {
-            // utrzymanie objektu mutex zablokowanego
-            lock_guard<mutex> lg(v2_m);
-            horizontal_second_free = false;
-        }
-        else
-        {
-            horizontal_second_free = true;
-            // powiadomienie zmiennej warunkowej o zdjęciu blokady
-            v2_cv.notify_all();
-        }  
-
-        if (if_vertical_first_busy() == true)
-        {
-            // utrzymanie objektu mutex zablokowanego
-            lock_guard<mutex> lg(h1_m);
-            vertical_first_free = false;
-        }  
-        else
-        {
-            vertical_first_free = true;
-            // powiadomienie zmiennej warunkowej o zdjęciu blokady
-            h1_cv.notify_all();
-        } 
-
-        if (if_vertical_second_busy() == true)
-        {
-            // utrzymanie objektu mutex zablokowanego
-            lock_guard<mutex> lg(h2_m);
-            vertical_second_free = false;
-        } 
-        else
-        {
-            vertical_second_free = true;
-            // powiadomienie zmiennej warunkowej o zdjęciu blokady
-            h2_cv.notify_all();
-        }
-            
-
-        this_thread::sleep_for(chrono::milliseconds(5)); 
+        usleep(2 * 1000);
     }
 }
 
@@ -335,8 +229,6 @@ int main()
 
     // tworzenie wątków
     create_threads();
-    //thread thread_5(create_threads);
-    
     
     // bezpieczne zakończenie każdego wątku
     for (size_t j = 0; j < threads_1.size(); j++)

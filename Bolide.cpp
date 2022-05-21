@@ -5,15 +5,15 @@
 // dostępu do pamięci między różnymi wątkami
 extern atomic<bool> running_loop;
 
+// liczniki
+extern atomic <unsigned int> vertical_first_count;
+extern atomic <unsigned int> vertical_second_count;
+extern atomic <unsigned int> horizontal_first_count;
+extern atomic <unsigned int> horizontal_second_count;
+
 // mapy bolidów
 extern map <int, tuple<int, int, char, int>> bolide1_map;
 extern map <int, tuple<int, int, char, int>> bolide2_map;
-
-// zarządzanie skrzyżowaniami
-extern atomic<bool> vertical_first_free;
-extern atomic<bool> vertical_second_free;
-extern atomic<bool> horizontal_first_free;
-extern atomic<bool> horizontal_second_free;
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
@@ -43,7 +43,7 @@ Bolide::~Bolide()
 
 void Bolide::mvup()
 {
-    this_thread::sleep_for(chrono::milliseconds(speed*2));
+    usleep(speed * 2 * 1000);
 
     yLoc--;    
 }
@@ -51,7 +51,7 @@ void Bolide::mvup()
 
 void Bolide::mvdown()
 {
-    this_thread::sleep_for(chrono::milliseconds(speed*2));
+    usleep(speed * 2 * 1000);
 
     yLoc++; 
 }
@@ -59,7 +59,7 @@ void Bolide::mvdown()
 
 void Bolide::mvright()
 {
-    this_thread::sleep_for(chrono::milliseconds(speed));
+    usleep(speed * 1000);
 
     xLoc++;
 }
@@ -67,7 +67,7 @@ void Bolide::mvright()
 
 void Bolide::mvleft()
 {
-    this_thread::sleep_for(chrono::milliseconds(speed));
+    usleep(speed * 1000);
     
     xLoc--; 
 }
@@ -84,44 +84,91 @@ void Bolide::movement_long()
 
     while (running_loop)  // nieskończona liczba okrążeń - globalna zmienna atomic
     {
-        for (size_t i = 0; i < 136; i++)
+        for (size_t x = 0; x < 90; x++)
         {
-            // zatrzymuje się przed pierwszym skrzyżowaniem
-            if (xLoc == 110)
-            {
-                // SEKCJA KRYTYCZNA
-
-                // zablokowanie konkretnego wątku
-                unique_lock<mutex> ul(h1_m);
-                // zmienna warunkowa czekanie na wznowienie
-                h1_cv.wait(ul, [] {return vertical_first_free == true;});
-            }
-
             mvright();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
         }
-        for (size_t i = 0; i < 21; i++)
+
+
+        // SEKCJA KRYTYCZNA
+        if (vertical_first_count > 0)
+        {   
+            // zablokowanie konkretnego wątku
+            unique_lock<mutex> ul1(h1_m);
+            // zmienna warunkowa czekanie na wznowienie
+            h1_cv.wait(ul1, [] {return vertical_first_count == 0;});
+        }
+ 
+        horizontal_first_count++;
+
+        // jest na skrzyżowaniu
+        for (size_t x = 89; x < 100; x++)
+        {
+            mvright();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
+        }
+
+        horizontal_first_count--;
+
+        // powiadomienie o przejezdności
+        if (horizontal_first_count == 0)
+        {
+            v1_cv.notify_all();
+        }
+
+        for (size_t x = 99; x < 136; x++)
+        {
+            mvright();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 1);
+        }
+
+        for (size_t y = 0; y < 21; y++)
         {
             mvdown();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 2);
         }
-        for (size_t i = 0; i < 136; i++)
+
+        for (size_t x = 0; x < 36; x++)
         {
-            // zatrzymuje się przed drugim skrzyżowaniem
-            if (xLoc == 122)
-            {
-                // SEKCJA KRYTYCZNA
-
-                // zablokowanie konkretnego wątku
-                unique_lock<mutex> ul(h2_m);
-                // zmienna warunkowa czekanie na wznowienie
-                h2_cv.wait(ul, [] {return vertical_second_free == true;});
-            }
-
             mvleft();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 3);
         }
-        for (size_t i = 0; i < 21; i++)
+
+        
+        // SEKCJA KRYTYCZNA
+        if (vertical_second_count > 0)
+        {
+            // zablokowanie konkretnego wątku
+            unique_lock<mutex> ul2(h2_m);
+            // zmienna warunkowa czekanie na wznowienie
+            h2_cv.wait(ul2, [] {return vertical_second_count == 0;});
+        }
+
+        horizontal_second_count++;
+
+        // jest na skrzyżowaniu
+        for (size_t x = 35; x < 46; x++)
+        {
+            mvleft();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 3);
+        }
+        
+        horizontal_second_count--;
+
+        // powiadomienie o przejezdności
+        if (horizontal_second_count == 0)
+        {
+            v2_cv.notify_all();
+        }
+
+        for (size_t x = 45; x < 136; x++)
+        {
+            mvleft();
+            bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 3);
+        }
+
+        for (size_t y = 0; y < 21; y++)
         {
             mvup();
             bolide1_map[id] = make_tuple(xLoc, yLoc, sign, 4);
@@ -133,34 +180,74 @@ void Bolide::movement_long()
 void Bolide::movement_short()
 {
     // trasa
-    for (size_t i = 0; i < 35; i++)
+    for (size_t i = 0; i < 4; i++)
     {
-        // dla bolidów jadących w dół
-        if (type == 1)
-        {
-            // zatrzymuje się przed pierwszym skrzyżowaniem
-            if (yLoc == 8)
-            {
-                // SEKCJA KRYTYCZNA
+        mvdown();
+        bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
+    }
 
-                // zablokowanie konkretnego wątku
-                unique_lock<mutex> ul(v1_m);
-                // zmienna warunkowa czekanie na wznowienie
-                v1_cv.wait(ul, [] {return horizontal_first_free == true;});
-            }
+    vertical_first_count++;
 
-            // zatrzymuje się przed drugim skrzyżowaniem
-            else if (yLoc == 29)
-            {
-                // SEKCJA KRYTYCZNA
 
-                // zablokowanie konkretnego wątku
-                unique_lock<mutex> ul(v2_m);
-                // zmienna warunkowa czekanie na wznowienie
-                v2_cv.wait(ul, [] {return horizontal_second_free == true;});
-            }
-        }
+    // SEKCJA KRYTYCZNA
+    if (horizontal_first_count > 0)
+    {
+        // zablokowanie konkretnego wątku
+        unique_lock<mutex> ul1(v1_m);
+        // zmienna warunkowa czekanie na wznowienie
+        v1_cv.wait(ul1, [] {return horizontal_first_count == 0;});
+    }
 
+    // jest na skrzyżownaiu
+    for (size_t i = 3; i < 9; i++)
+    {
+        mvdown();
+        bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
+    }
+
+    vertical_first_count--;
+
+    // powiadomienie o przejezdności
+    if (vertical_first_count == 0)
+    {
+        h1_cv.notify_all();
+    }
+
+    for (size_t i = 8; i < 23; i++)
+    {
+        mvdown();
+        bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
+    }
+
+    vertical_second_count++;
+
+
+    // SEKCJA KRYTYCZNA
+    if (horizontal_second_count > 0)
+    {
+        // zablokowanie konkretnego wątku
+        unique_lock<mutex> ul2(v2_m);
+        // zmienna warunkowa czekanie na wznowienie
+        v2_cv.wait(ul2, [] {return horizontal_second_count == 0;});
+    }
+    
+    // jest na skrzyżownaiu
+    for (size_t i = 22; i < 28; i++)
+    {
+        mvdown();
+        bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
+    }
+
+    vertical_second_count--;
+
+    // powiadomienie o przejezdności
+    if (vertical_second_count == 0)
+    {
+        h2_cv.notify_all();
+    }
+
+    for (size_t i = 27; i < 31; i++)
+    {
         mvdown();
         bolide2_map[id] = make_tuple(xLoc, yLoc, sign, 2);
     }
