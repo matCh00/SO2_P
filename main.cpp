@@ -1,3 +1,7 @@
+/*
+  OPIS ZADANIA W PLIKU README.md
+*/
+
 #include "libs.hpp"
 #include "Road.hpp"
 #include "Bolide.hpp"

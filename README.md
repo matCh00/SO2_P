@@ -14,6 +14,8 @@
 
 
 + ### etap 3
+    ograniczyć maksymalną liczbę pojazdów w tym samym kierunku
+    limit to 6 w pionie i 6 w poziomie
     
     
 --------------
