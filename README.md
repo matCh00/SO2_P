@@ -23,3 +23,6 @@
 ### kompilowanie i uruchamianie
 + make
 + ./program
+
+
+![gif](https://github.com/matCh00/SO2_P/blob/master/gif.gif)
