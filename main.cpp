@@ -9,16 +9,14 @@
 #define FIRST_PAIR 1
 #define SECOND_PAIR 2
 
-// atomic gwarantuje że nie wystąpi wyścig 
-// danych i jest używany do synchronizowania 
-// dostępu do pamięci między różnymi wątkami
-atomic<bool> running_loop(true);
+// generowanie nowych pojazdów
+bool running_loop = true;
 
 // liczniki
-atomic <unsigned int> vertical_first_count(0);
-atomic <unsigned int> vertical_second_count(0);
-atomic <unsigned int> horizontal_first_count(0);
-atomic <unsigned int> horizontal_second_count(0);
+unsigned int vertical_first_count = 0;
+unsigned int vertical_second_count = 0;
+unsigned int horizontal_first_count = 0;
+unsigned int horizontal_second_count = 0;
 
 // mapy bolidów
 map <int, tuple<int, int, char, int>> bolide1_map;
@@ -30,11 +28,17 @@ vector<thread> threads_2;
 
 // mutexy chronią współdzielone dane 
 // przed równoczesnym dostępem wielu wątków
-mutex h1_m, h2_m, v1_m, v2_m;
+mutex h1_m, h2_m, v1_m, v2_m, h1_mq, h2_mq, v1_mq, v2_mq;
 
 // zmienne warynkowe to obiekty które mogą blokować wątek 
 // wywołujący dopóki nie zostanie powiadomiony o wznowieniu
-condition_variable h1_cv, h2_cv, v1_cv, v2_cv;
+condition_variable h1_cv, h2_cv, v1_cv, v2_cv, h1_cvq, h2_cvq, v1_cvq, v2_cvq;
+
+// kolejki pojazdów
+queue<int> h1_q;
+queue<int> h2_q;
+queue<int> v1_q;
+queue<int> v2_q;
 
 
 void exit_loop()
@@ -52,6 +56,8 @@ void exit_loop()
 
 void display_bolides()
 {
+    int h1_max = 0, h2_max = 0, v1_max = 0, v2_max = 0;
+
     while (true)
     {
         for (auto m1 : bolide1_map)
@@ -168,6 +174,41 @@ void display_bolides()
         mvprintw(39, 116, " ");
         mvprintw(11, 20, " "); 
 
+        if (h1_max < horizontal_first_count)
+            h1_max = horizontal_first_count;
+        if (h2_max < horizontal_second_count)
+            h2_max = horizontal_second_count;
+        if (v1_max < vertical_first_count)
+            v1_max = vertical_first_count;
+        if (v2_max < vertical_second_count)
+            v2_max = vertical_second_count;
+
+        // statystyki
+        mvprintw(1, 101, "%c", ' ');
+        mvprintw(4, 101, "%c", ' ');
+        mvprintw(0, 101, "%c", ' ');
+        mvprintw(3, 101, "%c", ' ');
+        mvprintw(1, 80, "1 poziome: ");
+        mvprintw(4, 80, "2 poziome: ");
+        mvprintw(0, 80, "1 pionowe: ");
+        mvprintw(3, 80, "2 pionowe: ");
+        mvprintw(1, 95, "max: ");
+        mvprintw(4, 95, "max: ");
+        mvprintw(0, 95, "max: ");
+        mvprintw(3, 95, "max: ");
+        attron(COLOR_PAIR(1));
+        mvprintw(1, 91, "%d", horizontal_first_count);
+        mvprintw(4, 91, "%d", horizontal_second_count);
+        mvprintw(1, 100, "%d", h1_max);
+        mvprintw(4, 100, "%d", h2_max);
+        attroff(COLOR_PAIR(1));
+        attron(COLOR_PAIR(2));
+        mvprintw(0, 91, "%d", vertical_first_count);
+        mvprintw(3, 91, "%d", vertical_second_count);
+        mvprintw(0, 100, "%d", v1_max);
+        mvprintw(3, 100, "%d", v2_max);
+        attroff(COLOR_PAIR(2));
+
         refresh();
             
         usleep(2 * 1000);
@@ -249,7 +290,12 @@ int main()
     // dlaczego tak? dzięki temu wyświetlamy pojazdy do momentu zakończenia wątku każdego pojazdu
     // bez tego ekran się zamraża a wątki każdego pojazdu po zakończeniu ich tworzenia kończą się bez wizualizacji
     thread_4.~thread();
-    
+
+    for (size_t i = 0; i < h1_q.size(); i++)
+    {
+        printf("%d, ", h1_q.front());
+        h1_q.pop();
+    }
 
     endwin(); // koniec ncurses
 

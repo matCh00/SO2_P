@@ -8,5 +8,7 @@
 #include <condition_variable>
 #include <map>
 #include <tuple>
+#include <queue>
+#include <list>
 
 using namespace std;
